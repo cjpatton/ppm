@@ -24,7 +24,7 @@
 #
 title: "Multi-party Protocols for Privacy-preserving Measurement"
 abbrev: "Multi-party PPM protocols"
-docname: draft-todo-yourname-protocol-latest
+docname: draft-patton-multi-ppm-latest
 category: info
 
 ipr: trust200902
