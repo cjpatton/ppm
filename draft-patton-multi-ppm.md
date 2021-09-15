@@ -22,8 +22,8 @@
 #
 # Delete this comment when you are done.
 #
-title: "TODO - Your title"
-abbrev: "TODO - Abbreviation"
+title: "Multi-party Protocols for Privacy-preserving Measurement"
+abbrev: "Multi-party PPM protocols"
 docname: draft-todo-yourname-protocol-latest
 category: info
 
