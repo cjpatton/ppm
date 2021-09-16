@@ -59,8 +59,8 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction
-   2.  Verifiable and Distributed Aggregation Functions (VDAFs)
-   3.  Conventions and Definitions
+   2.  Conventions and Definitions
+   3.  Verifiable and Distributed Aggregation Functions (VDAFs)
    4.  Security Considerations
    5.  IANA Considerations
    6.  Normative References
@@ -71,7 +71,15 @@ Table of Contents
 
    TODO Introduction
 
-2.  Verifiable and Distributed Aggregation Functions (VDAFs)
+2.  Conventions and Definitions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+3.  Verifiable and Distributed Aggregation Functions (VDAFs)
 
    A "Verifiable and Distributed Aggregation Function (VDAF)" specifies
    the distributed execution of an aggregation function wherein the
@@ -152,14 +160,6 @@ Table of Contents
 
      Figure 1: Flow of an r-round, s-aggregator DIVP.  The '====' line
                       represents a broadcast channel.
-
-3.  Conventions and Definitions
-
-   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
-   "OPTIONAL" in this document are to be interpreted as described in
-   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
-   capitals, as shown here.
 
 4.  Security Considerations
 
