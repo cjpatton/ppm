@@ -57,6 +57,12 @@ TODO Abstract
 
 TODO Introduction
 
+
+# Conventions and Definitions
+
+{::boilerplate bcp14-tagged}
+
+
 # Verifiable and Distributed Aggregation Functions (VDAFs)
 
 
@@ -138,9 +144,6 @@ aggregator 1       aggregator 2             aggregator s
 {: #vdaf-flow title="Flow of an r-round, s-aggregator DIVP. The '====' line
 represents a broadcast channel."}
 
-# Conventions and Definitions
-
-{::boilerplate bcp14-tagged}
 
 
 
