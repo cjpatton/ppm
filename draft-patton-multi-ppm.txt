@@ -4,8 +4,8 @@
 
 TODO Working Group                                             C. Patton
 Internet-Draft                                                Cloudflare
-Intended status: Informational                         16 September 2021
-Expires: 20 March 2022
+Intended status: Informational                         17 September 2021
+Expires: 21 March 2022
 
 
         Multi-party Protocols for Privacy-preserving Measurement
@@ -13,7 +13,13 @@ Expires: 20 March 2022
 
 Abstract
 
-   TODO Abstract
+   Various multi-party protocols for computing aggregate statistics over
+   client measurements are described.  Based on secret sharing, these
+   protocols are designed to ensure that individual client measurements
+   are never seen in the clear as long as at least one data aggregation
+   servers executes the protocol honestly.  Some of the protocols also
+   allow the servers to detect cheating clients using zero-knowledge
+   proof techniques.
 
 Discussion Venues
 
@@ -40,7 +46,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 March 2022.
+   This Internet-Draft will expire on 21 March 2022.
 
 Copyright Notice
 
@@ -75,8 +81,19 @@ Table of Contents
 
    TODO Introduction
 
-   Papers with techniques we're hoping to unify into one primitive:
-   [AGJp21], [BBCGp19], [BBCGp21], [CGB17], ... any others?
+   VDAFs from the literature:
+
+   *  Prio [CGB17] defines the composition of a linear secret sharing
+      scheme and an affine-aggregatable encoding of a statistic.
+
+   *  A special case of zero-knowledge proofs over distributed data
+      [BBCGp19] in which the client speaks once.
+
+   *  The composition of an incremental DPF and the secure-sketching
+      protocol for subset histograms defined in [BBCGp19].
+
+   *  Prio+ [AGJp21] has the client upload XOR shares and then has the
+      servers convert them to additive shares over a number of rounds.
 
 2.  Conventions and Definitions
 
@@ -109,52 +126,62 @@ Table of Contents
    for executing an aggregation function over a set of user inputs.  By
    distributing the input across multiple aggregators, the protocol
    ensures that individual inputs are never seen in the clear.
-   Syntactically, a DAF is made up of two algorithms:
+   Syntactically, an "s"-aggregator DAF is made up of two algorithms:
 
-   *  "dist_input(input: I) -> input_shares: W^s" is the randomized
-      input-distribution algorithm.  It is run by the client in order to
-      split its input into "s" input shares, where "s" is the number of
-      aggregators.  Set "I" is called the input space and set "W" is
-      called the input-share space.  The sequence of input shares is
-      sometimes referred to as the distributed input.
+   *  "dist_input(input) -> input_shares" is the randomized input-
+      distribution algorithm.  It is run by the client in order to split
+      its input into "s" input shares, where "s" is the number of
+      aggregators (i.e., "len(input_shares) == s").  The sequence of
+      input shares is also referred to as the distributed input.
 
-   *  "dist_output(param: P, input_share: W) -> output_share: O" is the
+   *  "dist_output(param, input_share) -> output_share" is the
       deterministic output-recovery algorithm.  It is run be each
-      aggregator in order to map an input share into an output share.
+      aggregator in order to map an input share to an output share.
       This mapping has an optional parameter, which can be used to
       "query" the input share multiple times, getting a different output
-      share each time.  Set "P" is called the parameter space and set
-      "O" is called the output space.
+      share each time.  We call this the aggregation parameter.
 
    Execution of a DAF is illustrated in Figure 1.  The client runs the
    input-distribution algorithm and sends an input share to each one of
-   the aggregators.  The aggregators select a parameter for querying
-   their input shares and run the output-recovery algorithm to obtain
-   their output shares.  DAF schemes are designed to ensure that no
-   proper subset of the aggregators can discern any information about
+   the aggregators.  The aggregators select a parameter for querying the
+   input shares, then each runs the output-recover algorithm to obtain
+   their share of the output.  DAF schemes are designed to ensure that
+   no proper subset of the aggregators can discern any information about
    the input or output given their view of the protocol.  (See
    Section 5.)
 
-   An example of a DAF is a "Distributed Point function" [GI14].  This
-   protocol is used to compute a "point function", which evaluates to
-   zero on every input except for one, called the "point".  The input-
-   distribution algorithm takes as input the point and the non-zero
-   value and returns a set of input shares.  Each aggregator evaluates
-   its share at specific points and combine their output shares to get
-   the results.
-
-   Another, slightly simpler, example of a DAF is the combination of a
-   linear secret sharing scheme with an "AFfine-aggregatable Encoding
-   (AFE)" described for Prio [CGB17].  An AFE represents a measurement
-   as a as a vector of elements of a finite field such that (1) the
-   measurement can be efficiently secret shared and (2) the aggregate
-   measurement can be computed by summing up the vectors.
-
 3.1.  Aggregability
 
-   TODO Require that the output space forms an additive group.
+   Let "O[param]" denote the support of the output-recovery algorithm
+   for a given aggregation parameter "param".  That is, set "O[param]"
+   contains the set of all possible outputs of "dist_output" when the
+   first input is "param" and the second is any input share.
 
-   TODO Say what aggregability means and define aggregation function.
+   Our applications require that for every aggregation parameter
+   "param", the set "O[param]" forms an additive group.  This allows the
+   aggregation function to be computed by having each aggregator sum up
+   its output shares locally, then having the aggregators collectively
+   compute the output by summing up their aggregated output shares.  In
+   particular, the aggregation function is computed over a set of inputs
+   "inputs" and an aggregation parameter "param" by running the
+   following algorithm:
+
+   def RunDAF(param, inputs):
+     output_shares = [ 0 for j in range(s) ]
+
+     for input in inputs:
+       # Each client runs the input-distribution algorithm.
+       inputs_shares = dist_input(input)
+
+       # Each aggregator runs the output-recvoery algorithm.
+       for j in range(s):
+         output_shares[j] += dist_output(param, input_shares[j])
+
+     # Aggregators compute the final output.
+     return sum(output_shares)
+
+      Figure 2: Definition of the aggregation function computed by an
+                             s-aggregator DAF.
 
 4.  Verifiable Distributed Aggregation Functions
 
@@ -169,21 +196,21 @@ Table of Contents
    +---------------+  +---------------+        +---------------+
    | dist_start()  |  | dist_start()  |        | dist_start()  |
    +---------------+  +---------------+        +---------------+
-     | msg[1,1]         | msg[1,2]          ...  | msg[1,s]
+     |                  |                   ...  |
      =============================================
      |                  |                        |
      v                  v                        v
    +---------------+  +---------------+        +---------------+
    | dist_next_2() |  | dist_next_2() |        | dist_next_2() |
    +---------------+  +---------------+        +---------------+
-     | msg[2,1]         | msg[2,2]          ...  | msg[2,s]
+     |                  |                   ...  |
      =============================================
      |                  |                        |
      v                  v                        v
      .                  .                        .
      .                  .                        .
      .                  .                        .
-     | msg[r,1]         | msg[r,2]          ...  | msg[r,s]
+     |                  |                   ...  |
      =============================================
      |                  |                        |
      v                  v                        v
@@ -194,65 +221,94 @@ Table of Contents
      v                  v                        v
    aggregator 1       aggregator 2             aggregator s
 
-       Figure 2: Execution of an r-round, s-aggregator VDAF.  The ===
+       Figure 3: Execution of an r-round, s-aggregator VDAF.  The ===
                     line represents a broadcast channel.
 
-   TODO Say what it means for a distributed input to be (in)valid.
+   The main limitation of DAF schemes is that, because Because each
+   aggregator only holds a piece of the distributed input, there is no
+   way for them to check that the output is valid without revealing
+   their shares to one another.  A "Verifiable Distributed Aggregation
+   Function (VDAF)" is an extension of a DAF in which the aggregators
+   verify that the output is valid before recovering their output
+   shares.
 
-   Because each aggregator only holds a piece of the distributed input,
-   there is no way for them to check that the DAF output is valid
-   without revealing their shares to one another.  A "Verifiable
-   Distributed Aggregation Function (VDAF)" is a protocol designed to
-   ensure that the aggregators only recover output shares if the
-   corresponding input shares are valid.
-
-   Execution of a VDAF is illustrated in Figure 2.  It begins just as
-   before (Figure 1) by having the client run the input-distribution
+   Execution of a VDAF is illustrated in Figure 3.  It begins just as
+   before (see Figure 1) by having the client run the input-distribution
    algorithm and send an input share to each of the aggregators.  The
    aggregators then proceed in rounds, where in each round, each
-   aggregator produces a single outbound message and writes it to a
-   broadcast channel.  The broadcast channel waits for every aggregator
-   to output a message, then sends all of the messages to each
-   aggregator to begin the next round.  Eventually, each aggregator
+   aggregator produces a single outbound message.  The outbound messages
+   are written to a broadcast channel, then broadcast to all of the
+   aggregators to begin the next round.  Eventually, each aggregator
    decides if the input shares are valid based on its view of the
    protocol.  If so, it returns an output share.  Otherwise it returns
    an indication of invalidity.
 
-   Syntactically, a VDAF is made up of the following algorithms:
+   Syntactically, an "r"-round, "s"-aggregator VDAF is made up of the
+   following algorithms:
 
-   *  "dist_input(input: I) -> input_shares: W^s" is the input-
-      distribution algorithm defined precisely the same way as
-      Section 3.
+   *  "dist_input(input) -> input_shares" is the input-distribution
+      algorithm defined precisely the same way as Section 3.
 
-   *  "dist_init(param: P) -> states: Q^s" is the state-initialization
-      algorithm.  It is executed out-of-band in order to configure the
-      initial state of each aggregator, including any shared randomness.
-      Set "Q" is called the state space.
+   *  "dist_init(param) -> states" is the state-initialization
+      algorithm.  It takes as input the aggregation parameter and
+      outputs the initial state of each aggregator (i.e., "len(states)
+      == s").  This algorithm is executed out-of-band and is used to
+      configure the aggregators with whatever they need to run the
+      protocol (e.g., shared randomness).
 
-   *  "dist_start(state: Q, input_share: W) -> (new_state: Q, outbound:
-      M)" is the verify-start algorithm and is run by each aggregator in
+   *  "dist_start(state, input_share) -> (new_state, outbound_message)"
+      is the verify-start algorithm and is run by each aggregator in
       response to an input share from the client.  Its output is the
-      aggregator's round-"1" message.  Set "M" is called the message
-      space.
+      aggregator's first outbound message to be broadcast to the other
+      aggregators.
 
-   *  "dist_next_N(state: Q, inbound: M^s) -> (new_state: Q, outbound:
-      M)" is the round-"N" verification algorithm.  It consumes the
-      round-"(N-1)" messages and produces the aggregator's round-"N"
-      message.  The protocol defines this function for every "2 <= N <=
-      r".  (If "r=1", then this function is not defined.)
+   *  "dist_next_i(state, inbound_messages) -> (new_state,
+      outbound_message)" is used to consume the "(i-1)"-th round of
+      inbound messages (i.e., "len(inbound_messages) == s") and produces
+      the aggregator's "i"-th outbound message.  The protocol specifies
+      such a function for every "1 < i <= r"; if "r == 1", then this
+      function is not defined.
 
-   *  "dist_finish(state: Q, inbound: M^s) -> output_share: O" is the
-      verify-finish algorithm.  It consumes the round-"r" messages and
-      produces the aggregator's output share or an indication that the
-      input shares are invalid.
+   *  "dist_finish(state, inbound_messages) -> output_share" is the
+      verify-finish algorithm.  It consumes the "r"-th round of inbound
+      messages (i.e., "len(inbound_messages) == s") and produces the
+      aggregator's output share, or an indication that the input shares
+      are invalid.
 
-   TODO What we call an "input share" here is an "input share and proof
-   share" in the paper.  We'll need to harmonize the terminology,
-   probably by fixing the paper.
+   As for DAF schemes, we require that for each aggregation parameter
+   "param", the set of output shares "O[param]" forms an additive group.
+   The aggregation function is computed by running the VDAF as specified
+   below.
 
-   TODO What we call a "VDAF" is the composition of a "DAF" and its
-   input validation protocol from the paper.  We'll need to harmonize
-   the terminology, probably by fixing the paper.
+   def RunVDAF(param, inputs):
+     output_shares = [ 0 for j in range(s) ]
+
+     for input in inputs:
+       # Each client runs the input-distribution algorithm.
+       inputs_shares = dist_input(input)
+
+       # Aggregators recover their output shares.
+       states = dist_init(param)
+
+       outbound = []
+       for j in range(s):
+         (states[j], msg) = dist_start(states[j], input_shares[j])
+         outbound.append(msg)
+       inbound = outbound
+
+       for i in range(r-1):
+         outbound = []
+         for j in range(s):
+           (states[j], msg) = dist_next_i(states[j], inbound)
+           outbound.append(msg)
+         inbound = outbound
+
+       for j in range(s):
+         output_share[j] += dist_finish(states[j], inbound)
+
+     return sum(output_shares)
+
+           Figure 4: Execution of an r-round, s-aggregator VDAF.
 
 5.  Security Considerations
 
@@ -280,20 +336,25 @@ Table of Contents
 
 7.2.  Informative References
 
-   [AGJp21]   "Prio+: Privacy Preserving Aggregate Statistics via
-              Boolean Shares", n.d., <https://ia.cr/2021/576>.
+   [AGJp21]   Addanki, S., Garbe, K., Jaffe, E., Ostrovsky, R., and A.
+              Polychroniadou, "Prio+: Privacy Preserving Aggregate
+              Statistics via Boolean Shares", 2021,
+              <https://ia.cr/2021/576>.
 
-   [BBCGp19]  "Zero-Knowledge Proofs on Secret-Shared Data via Fully
-              Linear PCPs", CRYPTO 2019 , n.d..
+   [BBCGp19]  Boneh, D., Boyle, E., Corrigan-Gibbs, H., Gilboa, N., and
+              Y. Ishai, "Zero-Knowledge Proofs on Secret-Shared Data via
+              Fully Linear PCPs", CRYPTO 2019 , 2019.
 
-   [BBCGp21]  "Lightweight Techniques for Private Heavy Hitters", IEEE
-              S&P 2021 , n.d..
+   [BBCGp21]  Boneh, D., Boyle, E., Corrigan-Gibbs, H., Gilboa, N., and
+              Y. Ishai, "Lightweight Techniques for Private Heavy
+              Hitters", IEEE S&P 2021 , 2021.
 
-   [CGB17]    "Prio: Private, Robust, and Scalable Computation of
-              Aggregate Statistics", NSDI 2017 , n.d..
+   [CGB17]    Corrigan-Gibbs, H. and D. Boneh, "Prio: Private, Robust,
+              and Scalable Computation of Aggregate Statistics", NSDI
+              2017 , 2017.
 
-   [GI14]     "Distributed Point Functions and Their Applications",
-              EUROCRYPT 2014 , n.d..
+   [GI14]     Gilboa, N. and Y. Ishai, "Distributed Point Functions and
+              Their Applications", EUROCRYPT 2014 , 2014.
 
    [PAPER]    "TODO", n.d..
 
