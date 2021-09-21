@@ -550,7 +550,7 @@ def vdaf_start(state: State, r_input_share):
 
   k_joint_rand_share = get_key(k_blind,
       aggregator_id + input_share)
-  k_joint_rand = k_hint ^ k_joint_rand_hint
+  k_joint_rand = k_hint ^ k_joint_rand_share
 
   joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
   query_rand = expand(state.k_query_rand, QUERY_RAND_LEN)
