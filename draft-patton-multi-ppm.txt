@@ -71,7 +71,7 @@ Table of Contents
    3.  Distributed Aggregation Functions
      3.1.  Aggregability
    4.  Verifiable Distributed Aggregation Functions
-   5.  Prio3
+   5.  prio3
      5.1.  Dependencies
        5.1.1.  Fully Linear, Probabilistically Checkable Proof
        5.1.2.  Key Derivation
@@ -87,6 +87,9 @@ Table of Contents
 1.  Introduction
 
    TODO Introduction
+
+   The etymology of the term "VDAF" is that it is a generalization of
+   "Distributed Point Functions (DPFs)" [GI14].
 
    VDAFs from the literature:
 
@@ -352,12 +355,18 @@ Table of Contents
 
                        Figure 4: Execution of a VDAF.
 
-5.  Prio3
+5.  prio3
 
    NOTE This is WIP.
 
    NOTE This protocol has not undergone significant security analysis.
    This is planned for [PAPER].
+
+   The etymology of the term "prio3" is that it descends from the
+   original Prio construction [CGB17], which was deployed in Firefox's
+   origin telemetry project (i.e., "prio1").  It generalizes the more
+   recent deployment in the ENPA system (i.e., "prio2") and is based on
+   techniques described in [BBDGGI19].
 
 5.1.  Dependencies
 
@@ -504,7 +513,7 @@ Table of Contents
        ))
      return output
 
-         Figure 6: Input distribution algorithm for Prio v3.  TODO
+          Figure 6: Input distribution algorithm for prio3.  TODO
             Figure out how this looks in the normal text format.
 
    def vdaf_init(ignored_param):
@@ -514,7 +523,7 @@ Table of Contents
        states.append(ready(j, k_query_rand))
      return states
 
-           Figure 7: State-initialization algorithm for Prio v3.
+            Figure 7: State-initialization algorithm for prio3.
 
    def vdaf_start(state: State, r_input_share):
      if not state.ready(): raise ERR_STATE
@@ -546,7 +555,7 @@ Table of Contents
      output = encode_verifier_share(k_joint_rand, verifier_share)
      return (new_state, output)
 
-               Figure 8: Verify-start algorithm for Prio v3.
+                Figure 8: Verify-start algorithm for prio3.
 
    def vdaf_finish(state: State, r_verifier_shares):
      if not state.waiting(): raise ERR_STATE
@@ -567,7 +576,7 @@ Table of Contents
      if not pcp_decide(verifier): raise ERR_INVALID
      return state.input_share
 
-               Figure 9: Verify-finish algorithm for Prio v3.
+                Figure 9: Verify-finish algorithm for prio3.
 
    Auxiliary functions:
 
