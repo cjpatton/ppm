@@ -151,26 +151,26 @@ client
 +-----------------------------------------------------------+
 | daf_input()                                               |
 +-----------------------------------------------------------+
-  | input_shares[1]  | input_shares[2]   ...  | input_shares[s]
+  | input_shares[1]  | input_shares[2]   ...  | input_shares[SHARES]
   v                  v                        v
 +---------------+  +---------------+        +---------------+
 | daf_output()  |  | daf_output()  |        | daf_output()  |
 +---------------+  +---------------+        +---------------+
-  | output_shares[1] | output_shares[2]  ...  | output_shares[s]
+  | output_shares[1] | output_shares[2]  ...  | output_shares[SHARES]
   v                  v                        v
 aggregator 1       aggregator 2             aggregator s
 ~~~~
-{: #daf-flow title="Execution of an s-aggregator DAF."}
+{: #daf-flow title="Execution of a DAF."}
 
 A DAF is a multi-party protocol for executing an aggregation function over a set
 of user inputs. By distributing the input across multiple aggregators, the
 protocol ensures that individual inputs are never seen in the clear.
-Syntactically, an `s`-aggregator DAF is made up of two algorithms:
+Syntactically, an DAF is made up of two algorithms:
 
 * `daf_input(input) -> input_shares` is the randomized input-distribution
-  algorithm. It is run by the client in order to split its input into `s` input
-  shares, where `s` is the number of aggregators (i.e., `len(input_shares) ==
-  s`). Note that `s` is a parameter of, and fixed by, the DAF.
+  algorithm. It is run by the client in order to split its input into `SHARES`
+  input shares (i.e., `len(input_shares) == s`). Each input share is sent to one
+  of the aggregators.
 
 * `daf_output(param, input_share) -> output_share` is the deterministic
   output-recovery algorithm. It is run be each aggregator in order to map an
@@ -189,7 +189,7 @@ view of the protocol. (See {{security-considerations}}.)
 
 Associated constants:
 
-* `SHARES` TODO replace `s` with this.
+* `SHARES` is the number of aggregators for which the DAF is defined.
 
 ## Aggregability
 
@@ -223,14 +223,14 @@ In particular, the aggregation function is computed by the following algorithm.
 
 ~~~
 def run_daf(param, inputs):
-  output_shares = [ Zero[param] for j in range(s) ]
+  output_shares = [ Zero[param] for _ in range(SHARES) ]
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
     input_shares = daf_input(input)
 
     # Each aggregator runs the output-recvoery algorithm.
-    for j in range(s):
+    for j in range(SHARES):
       output_shares[j] += daf_output(param, input_shares[j])
 
   # Aggregators compute the final output.
@@ -249,7 +249,7 @@ client
 +-----------------------------------------------------------+
 | vdaf_input()                                              |
 +-----------------------------------------------------------+
-  | input_shares[1]  | input_shares[2]   ...  | input_shares[s]
+  | input_shares[1]  | input_shares[2]   ...  | input_shares[SHARES]
   v                  v                        v
 +---------------+  +---------------+        +---------------+
 | vdaf_start()  |  | vdaf_start()  |        | vdaf_start()  |
@@ -273,38 +273,38 @@ client
 +---------------+  +---------------+        +---------------+
 | vdaf_finish() |  | vdaf_finish() |        | vdaf_finish() |
 +---------------+  +---------------+        +---------------+
-  | output_shares[1] | output_shares[2]  ...  | output_shares[s]
+  | output_shares[1] | output_shares[2]  ...  | output_shares[SHARES]
   v                  v                        v
 aggregator 1       aggregator 2             aggregator s
 ~~~~
-{: #vdaf-flow title="Execution of an r-round, s-aggregator VDAF. The === line
-represents a broadcast channel."}
+{: #vdaf-flow title="Execution of a VDAF. The === line represents a broadcast
+channel."}
 
 The main limitation of DAF schemes is that, because each aggregator only holds a
 piece of the distributed input, there is no way for them to check that the
-output is valid without revealing their shares to one another. A VDAF is an
-extension of a DAF in which the aggregators verify that the output is valid
-before recovering their output shares. Doing so requires the aggregators to
+output is valid. A VDAF is an extension of a DAF in which the aggregators verify
+that the output is valid before recovering their output shares, without leaking
+their shares to the other aggregators. Doing so requires the aggregators to
 interact with one another, which they do over a broadcast channel.
 
 Execution of a VDAF is illustrated in {{vdaf-flow}}. It begins just as before
 (see {{daf-flow}}) by having the client run the input-distribution algorithm and
 send an input share to each of the aggregators. The aggregators then proceed in
-rounds, where in each round, each aggregator produces a single outbound message.
-The outbound messages are written to a broadcast channel, then broadcast to all
-of the aggregators to begin the next round. Eventually, each aggregator decides
-if the input shares are valid based on its view of the protocol. If so, it
-returns an output share. Otherwise it returns an indication of invalidity.
+a constant number of rounds, where in each round, each aggregator produces a
+single outbound message. The outbound messages are written to a broadcast
+channel, which transmits all of the messages to each aggregator in the next
+round. Eventually, each aggregator decides if the input shares are valid based
+on its view of the protocol. If so, it returns an output share. Otherwise it
+returns an indication of invalidity.
 
-Syntactically, an `r`-round, `s`-aggregator VDAF is made up of the following
-algorithms:
+Syntactically, a VDAF is made up of the following algorithms:
 
 * `vdaf_input(input) -> input_shares` is the input-distribution algorithm
   defined precisely the same way as `daf_input` in {{daf}}.
 
 * `vdaf_init(param) -> states: Vec[State]` is the state-initialization
   algorithm. It takes as input the aggregation parameter and outputs the initial
-  state of each aggregator (i.e., `len(states) == s`). This algorithm is
+  state of each aggregator (i.e., `len(states) == SHARES`). This algorithm is
   executed out-of-band and is used to configure the aggregators with whatever
   they need to run the protocol (e.g., shared randomness). Type `State` is
   defined by the VDAF scheme.
@@ -315,27 +315,26 @@ algorithms:
   first outbound message to be broadcast to the other aggregators.
 
 * `vdaf_next_i(state: State, inbound_messages) -> (new_state: State,
-  outbound_message)` is used to consume the `(i-1)`-th round of inbound messages
-  (note that `len(inbound_messages) == s`) and produces the aggregator's `i`-th
+  outbound_message)` consumes the `(i-1)`-th round of inbound messages (note
+  that `len(inbound_messages) == SHARES`) and produces the aggregator's `i`-th
   outbound message. The protocol specifies such a function for every `2 <= i <=
-  r`; if `r == 1`, then this function is not defined.
+  ROUNDS`, where `ROUNDS` is the number of rounds of the protocol. If `ROUNDS ==
+  1`, then no such function is not defined.
 
 * `vdaf_finish(state: State, inbound_messages) -> output_share` is the
-  verify-finish algorithm. It consumes the `r`-th round of inbound messages
-  (note that `len(inbound_messages) == s`) and produces the aggregator's output
+  verify-finish algorithm. It consumes the last round of inbound messages (note
+  that `len(inbound_messages) == SHARES`) and produces the aggregator's output
   share, or an indication that the input shares are invalid.
-
-Like DAFs, the number of aggregators `s` is a parameter of the scheme.
-Similarly, the number of rounds `r` is a constant specified by the VDAF.
 
 Associated types:
 
-* `State` TODO
+* `State` is the state of an aggregator during executing of the VDAF. It is
+  defined by the VDAF itself.
 
 Associated constants:
 
-* `SHARES` TODO replace `s` with this.
-* `ROUNDS` TODO replace `r` with this.
+* `SHARES` is the number of aggregators for which the VDAF is defined.
+* `ROUNDS` is the number of rounds of communication between the aggregators.
 
 Just as for DAF schemes, we require that for each aggregation parameter `param`,
 the set of output shares `G(param)` forms an additive group. The aggregation
@@ -344,7 +343,7 @@ denote the additive identity of `G(param)`):
 
 ~~~
 def run_vdaf(param, inputs):
-  output_shares = [ Zero[param] for j in range(s) ]
+  output_shares = [ Zero[param] for _ in range(SHARES) ]
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
@@ -354,28 +353,28 @@ def run_vdaf(param, inputs):
     states = vdaf_init(param)
 
     outbound = []
-    for j in range(s):
+    for j in range(SHARES):
       (states[j], msg) = vdaf_start(states[j], input_shares[j])
       outbound.append(msg)
     inbound = outbound
 
-    for i in range(r-1):
+    for i in range(ROUNDS-1):
       outbound = []
-      for j in range(s):
+      for j in range(SHARES):
         (states[j], msg) = vdaf_next_i(states[j], inbound)
         outbound.append(msg)
       inbound = outbound
 
-    for j in range(s):
+    for j in range(SHARES):
       output_share[j] += vdaf_finish(states[j], inbound)
 
   # Aggregators compute the final output.
   return sum(output_shares)
 ~~~
-{: #run-vdaf title="Execution of an r-round, s-aggregator VDAF."}
+{: #run-vdaf title="Execution of a VDAF."}
 
 
-# [Working Title] Prio v3 {#prio3}
+# Prio3 {#prio3}
 
 NOTE This is WIP.
 
