@@ -149,12 +149,12 @@ client
   | input
   v
 +-----------------------------------------------------------+
-| daf_input()                                              |
+| daf_input()                                               |
 +-----------------------------------------------------------+
   | input_shares[1]  | input_shares[2]   ...  | input_shares[s]
   v                  v                        v
 +---------------+  +---------------+        +---------------+
-| daf_output() |  | daf_output() |        | daf_output() |
+| daf_output()  |  | daf_output()  |        | daf_output()  |
 +---------------+  +---------------+        +---------------+
   | output_shares[1] | output_shares[2]  ...  | output_shares[s]
   v                  v                        v
