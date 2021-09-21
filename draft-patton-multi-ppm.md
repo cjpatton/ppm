@@ -187,6 +187,10 @@ output. DAF schemes are designed to ensure that no proper subset of the
 aggregators can discern any information about the input or output given their
 view of the protocol. (See {{security-considerations}}.)
 
+Associated constants:
+
+* `SHARES` TODO replace `s` with this.
+
 ## Aggregability
 
 <!---
@@ -218,7 +222,7 @@ In particular, the aggregation function is computed by the following algorithm.
 (let `Zero[param]` be the identity element of `G[param]`):
 
 ~~~
-def RunDAF(param, inputs):
+def run_daf(param, inputs):
   output_shares = [ Zero[param] for j in range(s) ]
 
   for input in inputs:
@@ -232,7 +236,7 @@ def RunDAF(param, inputs):
   # Aggregators compute the final output.
   return sum(output_shares)
 ~~~
-{: #daf-alg title="Definition of the aggregation function computed by an
+{: #run-daf title="Definition of the aggregation function computed by an
 s-aggregator DAF."}
 
 
@@ -300,30 +304,40 @@ algorithms:
 * `dist_input(input) -> input_shares` is the input-distribution algorithm
   defined precisely the same way as {{daf}}.
 
-* `dist_init(param) -> states` is the state-initialization algorithm. It takes
-  as input the aggregation parameter and outputs the initial state of each
-  aggregator (i.e., `len(states) == s`). This algorithm is executed out-of-band
-  and is used to configure the aggregators with whatever they need to run the
-  protocol (e.g., shared randomness).
+* `dist_init(param) -> states: Vec[State]` is the state-initialization
+  algorithm. It takes as input the aggregation parameter and outputs the initial
+  state of each aggregator (i.e., `len(states) == s`). This algorithm is
+  executed out-of-band and is used to configure the aggregators with whatever
+  they need to run the protocol (e.g., shared randomness). Type `State` is
+  defined by the VDAF scheme.
 
-* `dist_start(state, input_share) -> (new_state, outbound_message)` is the
-  verify-start algorithm and is run by each aggregator in response to an input
-  share from the client. Its output is the aggregator's first outbound message to be
-  broadcast to the other aggregators.
+* `dist_start(state: State, input_share) -> (new_state: State,
+  outbound_message)` is the verify-start algorithm and is run by each aggregator
+  in response to an input share from the client. Its output is the aggregator's
+  first outbound message to be broadcast to the other aggregators.
 
-* `dist_next_i(state, inbound_messages) -> (new_state, outbound_message)` is
-  used to consume the `(i-1)`-th round of inbound messages (note that
-  `len(inbound_messages) == s`) and produces the aggregator's `i`-th outbound
-  message. The protocol specifies such a function for every `2 <= i <= r`; if `r
-  == 1`, then this function is not defined.
+* `dist_next_i(state: State, inbound_messages) -> (new_state: State,
+  outbound_message)` is used to consume the `(i-1)`-th round of inbound messages
+  (note that `len(inbound_messages) == s`) and produces the aggregator's `i`-th
+  outbound message. The protocol specifies such a function for every `2 <= i <=
+  r`; if `r == 1`, then this function is not defined.
 
-* `dist_finish(state, inbound_messages) -> output_share` is the verify-finish
-  algorithm. It consumes the `r`-th round of inbound messages (note that
-  `len(inbound_messages) == s`) and produces the aggregator's output share, or
-  an indication that the input shares are invalid.
+* `dist_finish(state: State, inbound_messages) -> output_share` is the
+  verify-finish algorithm. It consumes the `r`-th round of inbound messages
+  (note that `len(inbound_messages) == s`) and produces the aggregator's output
+  share, or an indication that the input shares are invalid.
 
 Like DAFs, the number of aggregators `s` is a parameter of the scheme.
 Similarly, the number of rounds `r` is a constant specified by the VDAF.
+
+Associated types:
+
+* `State` TODO
+
+Associated constants:
+
+* `SHARES` TODO replace `s` with this.
+* `ROUNDS` TODO replace `r` with this.
 
 Just as for DAF schemes, we require that for each aggregation parameter `param`,
 the set of output shares `G[param]` forms an additive group. The aggregation
@@ -331,8 +345,8 @@ function is computed by running the VDAF as specified below (let `Zero[param]`
 denote the additive identity of `G[param]`):
 
 ~~~
-def RunVDAF(param, inputs):
-  output_shares = [ `Zero[param] for j in range(s) ]
+def run_vdaf(param, inputs):
+  output_shares = [ Zero[param] for j in range(s) ]
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
@@ -360,7 +374,222 @@ def RunVDAF(param, inputs):
   # Aggregators compute the final output.
   return sum(output_shares)
 ~~~
-{: #vdaf-alg title="Execution of an r-round, s-aggregator VDAF."}
+{: #run-vdaf title="Execution of an r-round, s-aggregator VDAF."}
+
+
+# [Working Title] Prio v3 {#prio3}
+
+NOTE This is WIP.
+
+NOTE This protocol has not undergone significant security analysis. This is
+planned for [PAPER].
+
+## Dependencies
+
+### Fully Linear, Probabilistically Checkable Proof
+
+NOTE [BBDGGI19] call this a 1.5-round, public-coin, interactive oracle proof
+system.
+
+* `pcp_prove(input: Vec[Field], prove_rand: Vec[Field], joint_rand: Vec[Field]) ->
+  proof: Vec[Field]` is the proof-generation algorithm.
+* `pcp_query(input: Vec[Field], proof: Vec[Field], query_rand: Vec[Field],
+  joint_rand: Vec[Field]) -> verifier: Vec[Field]` is the query-generation
+  algorithm.
+* `pcp_decide(verifier: Vec[Field]) -> decision: Boolean` is the decision algorithm.
+
+Associated types
+
+* `Field`
+  * `vec_rand`
+  * `vec_zeros`
+  * `encode_vec`
+  * `decode_vec`
+
+Associated constants:
+
+* `JOINT_RAND_LEN`
+* `PROVE_RAND_LEN`
+* `QUERY_RAND_LEN`
+
+Execution semantics:
+
+~~~
+def run_pcp(input):
+  joint_rand = vec_rand(JOINT_RAND_LEN)
+  prove_rand = vec_rand(PROVE_RAND_LEN)
+  query_rand = vec_rand(QUERY_RAND_LEN)
+
+  # Prover generates the proof.
+  proof = pcp_prove(input, prove_rand, joint_rand)
+
+  # Verifier queries the input and proof.
+  verifier = pcp_query(input, proof, query_rand, joint_rand)
+
+  # Verifier decides if the input is valid.
+  return pcp_decide(verifier)
+~~~
+{: #run-pcp title="Execution of a fully linear PCP."}
+
+
+### Key Derivation
+
+[TODO Separate this syntax from what people usually think of as a KDF.] A
+key-derivation scheme consists of the following algorithms:
+
+* `get_key(init_key, input) -> key`
+* `get_key_stream(key) -> state: KeyStream`
+* `key_stream_next(state: KeyStream, len: U32) -> (new_state: KeyStream, output)`
+
+Associated types:
+
+* `KeyStream`
+
+Associated constants:
+
+* `KEY_SIZE`
+
+## Construction
+
+~~~
+def dist_input(r_input):
+  input = decode_vec(r_input)
+  s_joint_rand = zeros(SEED_SIZE)
+
+  # Generate input shares.
+  leader_input_share = input
+  s_helper_input_shares = []
+  s_helper_blinds = []
+  s_helper_hints = []
+  for j in range(s-1):
+    s_blind = get_rand(KEY_SIZE)
+    s_share = get_rand(KEY_SIZE)
+    helper_input_share = expand(s_share, len(leader_input_share))
+    leader_input_share -= helper_input_share
+    s_hint = get_key(s_blind,
+        byte(j+1) + encode_vec(helper_input_share))
+    s_joint_rand ^= s_hint
+    s_helper_input_shares.append(s_share)
+    s_helper_blinds.append(s_blind)
+    s_helper_hints.append(s_hint)
+  s_leader_blind = get_rand(KEY_SIZE)
+  s_leader_hint = get_key(s_leader_blind,
+      byte(0) + encode_vec(leader_input_share))
+  s_joint_rand ^= s_leader_hint
+
+  # Finish joint randomness hints.
+  for j in range(s-1):
+    s_helper_hints[i] ^= s_joint_rand
+  s_leader_hint ^= s_joint_rand
+
+  # Generate the proof shares.
+  joint_rand = expand(s_joint_rand, JOINT_RAND_LEN)
+  prove_rand = expand(get_rand(KEY_SIZE), PROVE_RAND_LEN)
+  leader_proof_share = pcp_prove(input, prove_rand, query_rand)
+  s_helper_proof_shares = []
+  for j in range(s-1):
+    s_share = get_rand(KEY_SIZE)
+    s_helper_proof_shares.append(s_share)
+    helper_proof_share = expand(s_share, len(leader_proof_share))
+    leader_proof_share -= helper_proof_share
+
+  output = []
+  output.append(encode_leader_share(
+    leader_input_share,
+    leader_proof_share,
+    s_leader_blind,
+    s_leader_hint,
+  ))
+  for j in range(s-1):
+    output.append(encode_helper_share(
+      (s_helper_input_share[j], len(leader_input_share)),
+      (s_helper_proof_share[j], len(leader_proof_share)),
+      s_helper_blinds[j],
+      s_helper_hints[j],
+    ))
+  return output
+~~~
+{: #prio3-dist-input title="Input distribution algorithm for Prio v3. TODO
+Figure out how this looks in the normal text format."}
+
+~~~
+def dist_init(ignored_param):
+  s_query_rand = get_rand(KEY_SIZE)
+  states = []
+  for j in range(s):
+    states.append(ready(j, s_query_rand))
+  return states
+~~~
+{: #prio3-dist-init title="State-initialization algorithm for Prio v3."}
+
+~~~
+def dist_start(state: State, r_input_share):
+  if not state.ready(): raise ERR_STATE
+
+  if state.aggregator_id == byte(0): # Leader
+    (input_share,
+     proof_share,
+     s_blind,
+     s_hint) = decode_leader_share(input_share)
+  else: # Helper
+    (l_input_share,
+     l_proof_share,
+     s_blind,
+     s_hint) = decode_helper_share(input_share)
+    input_share = expand(*l_input_share)
+    proof_share = expand(*l_proof_share)
+
+  s_joint_rand_share = get_key(s_blind,
+      aggregator_id + input_share)
+  s_joint_rand = s_hint ^ s_joint_rand_hint
+
+  joint_rand = expand(s_joint_rand, JOINT_RAND_LEN)
+  query_rand = expand(state.s_query_rand, QUERY_RAND_LEN)
+  verifier_share = pcp_query(
+      input_share, proof_share, joint_rand, query_rand)
+  verifier_len = len(verifier_share)
+
+  new_state = wait(s_joint_rand, input_share, verifier_len)
+  output = encode_verifier_share(s_joint_rand, verifier_share)
+  return (new_state, output)
+~~~
+{: #prio3-dist-start title="Verify-start algorithm for Prio v3."}
+
+~~~
+def dist_finish(state: State, r_verifier_shares):
+  if not state.waiting(): raise ERR_STATE
+  if len(r_verifiers_shares) != s: raise ERR_DECODE
+
+  s_joint_rand = zeros(KEY_SIZE)
+  verifier = vec_zeros(state.verifier_len)
+  for r_share in r_verifier_shares:
+    (s_joint_rand_share,
+     verifier_share) = decode_verifier_share(r_share)
+    if len(verifier_share) != state.verifier_len:
+      raise ERR_DECODE
+
+    s_joint_rand ^= s_joint_rand_share
+    verifer += verifier_share
+
+  if s_joint_rand != state.s_joint_rand: raise ERR_INVALID
+  if not pcp_decide(verifier): raise ERR_INVALID
+  return state.input_share
+~~~
+{: #prio3-dist-finish title="Verify-finish algorithm for Prio v3."}
+
+Auxiliary functions (decoders raise ERR_DECODE):
+
+* `expand(seed, len: U32) -> output: Vec[Field]`
+* `encode_helper_share`
+* `encode_leader_share`
+* `decode_helper_share`
+* `decode_leader_share`
+* `encode_verifier_share`
+* `decode_verifier_share`
+* `ready`
+* `waiting`
+* `get_rand(len: U32) -> output`
+* `zeros(len: U32) -> output`
 
 
 # Security Considerations
