@@ -227,7 +227,7 @@ def run_daf(param, inputs):
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
-    inputs_shares = daf_input(input)
+    input_shares = daf_input(input)
 
     # Each aggregator runs the output-recvoery algorithm.
     for j in range(s):
@@ -350,7 +350,7 @@ def run_vdaf(param, inputs):
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
-    inputs_shares = vdaf_input(input)
+    input_shares = vdaf_input(input)
 
     # Aggregators verify and recover their output shares.
     states = vdaf_init(param)
@@ -390,6 +390,8 @@ planned for [PAPER].
 
 NOTE [BBDGGI19] call this a 1.5-round, public-coin, interactive oracle proof
 system.
+
+All raise `ERR_INPUT`:
 
 * `pcp_prove(input: Vec[Field], prove_rand: Vec[Field], joint_rand: Vec[Field]) ->
   proof: Vec[Field]` is the proof-generation algorithm.
@@ -463,58 +465,58 @@ Associated constants:
 ~~~
 def vdaf_input(r_input):
   input = decode_vec(r_input)
-  s_joint_rand = zeros(SEED_SIZE)
+  k_joint_rand = zeros(SEED_SIZE)
 
   # Generate input shares.
   leader_input_share = input
-  s_helper_input_shares = []
-  s_helper_blinds = []
-  s_helper_hints = []
+  k_helper_input_shares = []
+  k_helper_blinds = []
+  k_helper_hints = []
   for j in range(s-1):
-    s_blind = get_rand(KEY_SIZE)
-    s_share = get_rand(KEY_SIZE)
-    helper_input_share = expand(s_share, len(leader_input_share))
+    k_blind = get_rand(KEY_SIZE)
+    k_share = get_rand(KEY_SIZE)
+    helper_input_share = expand(k_share, len(leader_input_share))
     leader_input_share -= helper_input_share
-    s_hint = get_key(s_blind,
+    k_hint = get_key(k_blind,
         byte(j+1) + encode_vec(helper_input_share))
-    s_joint_rand ^= s_hint
-    s_helper_input_shares.append(s_share)
-    s_helper_blinds.append(s_blind)
-    s_helper_hints.append(s_hint)
-  s_leader_blind = get_rand(KEY_SIZE)
-  s_leader_hint = get_key(s_leader_blind,
+    k_joint_rand ^= k_hint
+    k_helper_input_shares.append(k_share)
+    k_helper_blinds.append(k_blind)
+    k_helper_hints.append(k_hint)
+  k_leader_blind = get_rand(KEY_SIZE)
+  k_leader_hint = get_key(k_leader_blind,
       byte(0) + encode_vec(leader_input_share))
-  s_joint_rand ^= s_leader_hint
+  k_joint_rand ^= k_leader_hint
 
   # Finish joint randomness hints.
   for j in range(s-1):
-    s_helper_hints[i] ^= s_joint_rand
-  s_leader_hint ^= s_joint_rand
+    k_helper_hints[i] ^= k_joint_rand
+  k_leader_hint ^= k_joint_rand
 
   # Generate the proof shares.
-  joint_rand = expand(s_joint_rand, JOINT_RAND_LEN)
+  joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
   prove_rand = expand(get_rand(KEY_SIZE), PROVE_RAND_LEN)
   leader_proof_share = pcp_prove(input, prove_rand, query_rand)
-  s_helper_proof_shares = []
+  k_helper_proof_shares = []
   for j in range(s-1):
-    s_share = get_rand(KEY_SIZE)
-    s_helper_proof_shares.append(s_share)
-    helper_proof_share = expand(s_share, len(leader_proof_share))
+    k_share = get_rand(KEY_SIZE)
+    k_helper_proof_shares.append(k_share)
+    helper_proof_share = expand(k_share, len(leader_proof_share))
     leader_proof_share -= helper_proof_share
 
   output = []
   output.append(encode_leader_share(
     leader_input_share,
     leader_proof_share,
-    s_leader_blind,
-    s_leader_hint,
+    k_leader_blind,
+    k_leader_hint,
   ))
   for j in range(s-1):
     output.append(encode_helper_share(
-      (s_helper_input_share[j], len(leader_input_share)),
-      (s_helper_proof_share[j], len(leader_proof_share)),
-      s_helper_blinds[j],
-      s_helper_hints[j],
+      (k_helper_input_share[j], len(leader_input_share)),
+      (k_helper_proof_share[j], len(leader_proof_share)),
+      k_helper_blinds[j],
+      k_helper_hints[j],
     ))
   return output
 ~~~
@@ -523,10 +525,10 @@ Figure out how this looks in the normal text format."}
 
 ~~~
 def vdaf_init(ignored_param):
-  s_query_rand = get_rand(KEY_SIZE)
+  k_query_rand = get_rand(KEY_SIZE)
   states = []
   for j in range(s):
-    states.append(ready(j, s_query_rand))
+    states.append(ready(j, k_query_rand))
   return states
 ~~~
 {: #prio3-vdaf-init title="State-initialization algorithm for Prio v3."}
@@ -538,28 +540,28 @@ def vdaf_start(state: State, r_input_share):
   if state.aggregator_id == byte(0): # Leader
     (input_share,
      proof_share,
-     s_blind,
-     s_hint) = decode_leader_share(input_share)
+     k_blind,
+     k_hint) = decode_leader_share(input_share)
   else: # Helper
     (l_input_share,
      l_proof_share,
-     s_blind,
-     s_hint) = decode_helper_share(input_share)
+     k_blind,
+     k_hint) = decode_helper_share(input_share)
     input_share = expand(*l_input_share)
     proof_share = expand(*l_proof_share)
 
-  s_joint_rand_share = get_key(s_blind,
+  k_joint_rand_share = get_key(k_blind,
       aggregator_id + input_share)
-  s_joint_rand = s_hint ^ s_joint_rand_hint
+  k_joint_rand = k_hint ^ k_joint_rand_hint
 
-  joint_rand = expand(s_joint_rand, JOINT_RAND_LEN)
-  query_rand = expand(state.s_query_rand, QUERY_RAND_LEN)
+  joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
+  query_rand = expand(state.k_query_rand, QUERY_RAND_LEN)
   verifier_share = pcp_query(
       input_share, proof_share, joint_rand, query_rand)
   verifier_length = len(verifier_share)
 
-  new_state = wait(s_joint_rand, input_share, verifier_length)
-  output = encode_verifier_share(s_joint_rand, verifier_share)
+  new_state = wait(k_joint_rand, input_share, verifier_length)
+  output = encode_verifier_share(k_joint_rand, verifier_share)
   return (new_state, output)
 ~~~
 {: #prio3-vdaf-start title="Verify-start algorithm for Prio v3."}
@@ -567,20 +569,20 @@ def vdaf_start(state: State, r_input_share):
 ~~~
 def vdaf_finish(state: State, r_verifier_shares):
   if not state.waiting(): raise ERR_STATE
-  if len(r_verifiers_shares) != s: raise ERR_DECODE
+  if len(r_verifier_shares) != s: raise ERR_DECODE
 
-  s_joint_rand = zeros(KEY_SIZE)
+  k_joint_rand = zeros(KEY_SIZE)
   verifier = vec_zeros(state.verifier_len)
   for r_share in r_verifier_shares:
-    (s_joint_rand_share,
+    (k_joint_rand_share,
      verifier_share) = decode_verifier_share(r_share)
     if len(verifier_share) != state.verifier_length:
       raise ERR_DECODE
 
-    s_joint_rand ^= s_joint_rand_share
+    k_joint_rand ^= k_joint_rand_share
     verifer += verifier_share
 
-  if s_joint_rand != state.s_joint_rand: raise ERR_INVALID
+  if k_joint_rand != state.k_joint_rand: raise ERR_INVALID
   if not pcp_decide(verifier): raise ERR_INVALID
   return state.input_share
 ~~~
