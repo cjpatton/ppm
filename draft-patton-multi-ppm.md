@@ -158,7 +158,7 @@ client
 +---------------+  +---------------+        +---------------+
   | output_shares[1] | output_shares[2]  ...  | output_shares[SHARES]
   v                  v                        v
-aggregator 1       aggregator 2             aggregator s
+aggregator 1       aggregator 2             aggregator SHARES
 ~~~~
 {: #daf-flow title="Execution of a DAF."}
 
@@ -275,7 +275,7 @@ client
 +---------------+  +---------------+        +---------------+
   | output_shares[1] | output_shares[2]  ...  | output_shares[SHARES]
   v                  v                        v
-aggregator 1       aggregator 2             aggregator s
+aggregator 1       aggregator 2             aggregator SHARES
 ~~~~
 {: #vdaf-flow title="Execution of a VDAF. The === line represents a broadcast
 channel."}
