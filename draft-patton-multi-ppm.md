@@ -422,7 +422,7 @@ Associated constants:
 Execution semantics:
 
 ~~~
-def run_pcp(input):
+def run_pcp(input: Vec[Field]):
   joint_rand = vec_rand(JOINT_RAND_LEN)
   prove_rand = vec_rand(PROVE_RAND_LEN)
   query_rand = vec_rand(QUERY_RAND_LEN)
