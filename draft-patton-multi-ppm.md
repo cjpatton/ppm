@@ -608,6 +608,8 @@ Auxiliary functions:
 * `zeros(length: U32) -> output` require that `lengh == len(output)` and that
   each element of `output` is zero.
 
+NOTE `JOINT_RAND_LEN` may be `0`, in which case the joint randomness computation
+is not necessary. Should we bake this option into the spec?
 
 # Security Considerations
 
