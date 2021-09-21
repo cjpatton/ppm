@@ -107,6 +107,9 @@ a misconfigured or malicious client submitted a malformed input.
 
 TODO Introduction
 
+The etymology of the term "VDAF" is that it is a generalization of "Distributed
+Point Functions (DPFs)" [GI14].
+
 VDAFs from the literature:
 
 * Prio [CGB17] defines the composition of a linear secret sharing scheme and
@@ -374,12 +377,17 @@ def run_vdaf(param, inputs):
 {: #run-vdaf title="Execution of a VDAF."}
 
 
-# Prio3 {#prio3}
+# prio3 {#prio3}
 
 NOTE This is WIP.
 
 NOTE This protocol has not undergone significant security analysis. This is
 planned for [PAPER].
+
+The etymology of the term "prio3" is that it descends from the original Prio
+construction [CGB17], which was deployed in Firefox's origin telemetry project
+(i.e., "prio1"). It generalizes the more recent deployment in the ENPA system
+(i.e., "prio2") and is based on techniques described in [BBDGGI19].
 
 ## Dependencies
 
@@ -517,7 +525,7 @@ def vdaf_input(r_input):
     ))
   return output
 ~~~
-{: #prio3-vdaf-input title="Input distribution algorithm for Prio v3. TODO
+{: #prio3-vdaf-input title="Input distribution algorithm for prio3. TODO
 Figure out how this looks in the normal text format."}
 
 ~~~
@@ -528,7 +536,7 @@ def vdaf_init(ignored_param):
     states.append(ready(j, k_query_rand))
   return states
 ~~~
-{: #prio3-vdaf-init title="State-initialization algorithm for Prio v3."}
+{: #prio3-vdaf-init title="State-initialization algorithm for prio3."}
 
 ~~~
 def vdaf_start(state: State, r_input_share):
@@ -561,7 +569,7 @@ def vdaf_start(state: State, r_input_share):
   output = encode_verifier_share(k_joint_rand, verifier_share)
   return (new_state, output)
 ~~~
-{: #prio3-vdaf-start title="Verify-start algorithm for Prio v3."}
+{: #prio3-vdaf-start title="Verify-start algorithm for prio3."}
 
 ~~~
 def vdaf_finish(state: State, r_verifier_shares):
@@ -583,7 +591,7 @@ def vdaf_finish(state: State, r_verifier_shares):
   if not pcp_decide(verifier): raise ERR_INVALID
   return state.input_share
 ~~~
-{: #prio3-vdaf-finish title="Verify-finish algorithm for Prio v3."}
+{: #prio3-vdaf-finish title="Verify-finish algorithm for prio3."}
 
 Auxiliary functions:
 
