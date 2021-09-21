@@ -141,7 +141,7 @@ Table of Contents
    +---------------+  +---------------+        +---------------+
      | output_shares[1] | output_shares[2]  ...  | output_shares[SHARES]
      v                  v                        v
-   aggregator 1       aggregator 2             aggregator s
+   aggregator 1       aggregator 2             aggregator SHARES
 
                        Figure 1: Execution of a DAF.
 
@@ -244,7 +244,7 @@ Table of Contents
    +---------------+  +---------------+        +---------------+
      | output_shares[1] | output_shares[2]  ...  | output_shares[SHARES]
      v                  v                        v
-   aggregator 1       aggregator 2             aggregator s
+   aggregator 1       aggregator 2             aggregator SHARES
 
          Figure 3: Execution of a VDAF.  The === line represents a
                              broadcast channel.
