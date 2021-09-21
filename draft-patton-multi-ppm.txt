@@ -481,19 +481,13 @@ Table of Contents
          byte(0) + encode_vec(leader_input_share))
      k_joint_rand ^= k_leader_hint
 
-     # Finish joint randomness.
-     if JOINT_RAND_LEN > 0:
-       for j in range(SHARES-1):
-         k_helper_hints[i] ^= k_joint_rand
-       k_leader_hint ^= k_joint_rand
-       joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
-     else:
-       for j in range(SHARES-1):
-         k_helper_hints[i] = None
-       k_leader_hint = None
-       joint_rand = []
+     # Finish joint randomness hints.
+     for j in range(SHARES-1):
+       k_helper_hints[i] ^= k_joint_rand
+     k_leader_hint ^= k_joint_rand
 
      # Generate the proof shares.
+     joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
      prove_rand = expand(get_rand(KEY_SIZE), PROVE_RAND_LEN)
      leader_proof_share = pcp_prove(input, prove_rand, joint_rand)
      k_helper_proof_shares = []
@@ -547,14 +541,11 @@ Table of Contents
        input_share = expand(*l_input_share)
        proof_share = expand(*l_proof_share)
 
-     if JOINT_RAND_LEN > 0:
-       k_joint_rand_share = get_key(k_blind,
-           aggregator_id + input_share)
-       k_joint_rand = k_hint ^ k_joint_rand_share
-       joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
-     else:
-       joint_rand = []
+     k_joint_rand_share = get_key(k_blind,
+         aggregator_id + input_share)
+     k_joint_rand = k_hint ^ k_joint_rand_share
 
+     joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
      query_rand = expand(state.k_query_rand, QUERY_RAND_LEN)
      verifier_share = pcp_query(
          input_share, proof_share, query_rand, joint_rand)
