@@ -391,7 +391,7 @@ Table of Contents
 
       -  "encode_vec"
 
-      -  "decode_vec" raises ERR_DECODE
+      -  "decode_vec" raises "ERR_DECODE"
 
       Associated constants:
 
