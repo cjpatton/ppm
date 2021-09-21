@@ -149,12 +149,12 @@ client
   | input
   v
 +-----------------------------------------------------------+
-| dist_input()                                              |
+| daf_input()                                              |
 +-----------------------------------------------------------+
   | input_shares[1]  | input_shares[2]   ...  | input_shares[s]
   v                  v                        v
 +---------------+  +---------------+        +---------------+
-| dist_output() |  | dist_output() |        | dist_output() |
+| daf_output() |  | daf_output() |        | daf_output() |
 +---------------+  +---------------+        +---------------+
   | output_shares[1] | output_shares[2]  ...  | output_shares[s]
   v                  v                        v
@@ -167,12 +167,12 @@ of user inputs. By distributing the input across multiple aggregators, the
 protocol ensures that individual inputs are never seen in the clear.
 Syntactically, an `s`-aggregator DAF is made up of two algorithms:
 
-* `dist_input(input) -> input_shares` is the randomized input-distribution
+* `daf_input(input) -> input_shares` is the randomized input-distribution
   algorithm. It is run by the client in order to split its input into `s` input
   shares, where `s` is the number of aggregators (i.e., `len(input_shares) ==
   s`). Note that `s` is a parameter of, and fixed by, the DAF.
 
-* `dist_output(param, input_share) -> output_share` is the deterministic
+* `daf_output(param, input_share) -> output_share` is the deterministic
   output-recovery algorithm. It is run be each aggregator in order to map an
   input share to an output share. This mapping has a parameter `param`, which
   can be used to "query" the input share multiple times with multiple
@@ -211,7 +211,7 @@ vectors.
 
 Let `G(param)` denote the support of the output-recovery algorithm for a given
 aggregation parameter `param`. That is, set `G(param)` contains the set of all
-possible outputs of `dist_output` when the first input is `param` and the second
+possible outputs of `daf_output` when the first input is `param` and the second
 is any input share.
 
 Correctness requires that, for every aggregation parameter `param`, the set
@@ -227,11 +227,11 @@ def run_daf(param, inputs):
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
-    inputs_shares = dist_input(input)
+    inputs_shares = daf_input(input)
 
     # Each aggregator runs the output-recvoery algorithm.
     for j in range(s):
-      output_shares[j] += dist_output(param, input_shares[j])
+      output_shares[j] += daf_output(param, input_shares[j])
 
   # Aggregators compute the final output.
   return sum(output_shares)
@@ -247,19 +247,19 @@ client
   | input
   v
 +-----------------------------------------------------------+
-| dist_input()                                              |
+| vdaf_input()                                              |
 +-----------------------------------------------------------+
   | input_shares[1]  | input_shares[2]   ...  | input_shares[s]
   v                  v                        v
 +---------------+  +---------------+        +---------------+
-| dist_start()  |  | dist_start()  |        | dist_start()  |
+| vdaf_start()  |  | vdaf_start()  |        | vdaf_start()  |
 +---------------+  +---------------+        +---------------+
   |                  |                   ...  |
   =============================================
   |                  |                        |
   v                  v                        v
 +---------------+  +---------------+        +---------------+
-| dist_next_2() |  | dist_next_2() |        | dist_next_2() |
+| vdaf_next_2() |  | vdaf_next_2() |        | vdaf_next_2() |
 +---------------+  +---------------+        +---------------+
   |                  |                   ...  |
   =============================================
@@ -273,7 +273,7 @@ client
   |                  |                        |
   v                  v                        v
 +---------------+  +---------------+        +---------------+
-| dist_finish() |  | dist_finish() |        | dist_finish() |
+| vdaf_finish() |  | vdaf_finish() |        | vdaf_finish() |
 +---------------+  +---------------+        +---------------+
   | output_shares[1] | output_shares[2]  ...  | output_shares[s]
   v                  v                        v
@@ -301,28 +301,28 @@ returns an output share. Otherwise it returns an indication of invalidity.
 Syntactically, an `r`-round, `s`-aggregator VDAF is made up of the following
 algorithms:
 
-* `dist_input(input) -> input_shares` is the input-distribution algorithm
-  defined precisely the same way as {{daf}}.
+* `vdaf_input(input) -> input_shares` is the input-distribution algorithm
+  defined precisely the same way as `daf_input` in {{daf}}.
 
-* `dist_init(param) -> states: Vec[State]` is the state-initialization
+* `vdaf_init(param) -> states: Vec[State]` is the state-initialization
   algorithm. It takes as input the aggregation parameter and outputs the initial
   state of each aggregator (i.e., `len(states) == s`). This algorithm is
   executed out-of-band and is used to configure the aggregators with whatever
   they need to run the protocol (e.g., shared randomness). Type `State` is
   defined by the VDAF scheme.
 
-* `dist_start(state: State, input_share) -> (new_state: State,
+* `vdaf_start(state: State, input_share) -> (new_state: State,
   outbound_message)` is the verify-start algorithm and is run by each aggregator
   in response to an input share from the client. Its output is the aggregator's
   first outbound message to be broadcast to the other aggregators.
 
-* `dist_next_i(state: State, inbound_messages) -> (new_state: State,
+* `vdaf_next_i(state: State, inbound_messages) -> (new_state: State,
   outbound_message)` is used to consume the `(i-1)`-th round of inbound messages
   (note that `len(inbound_messages) == s`) and produces the aggregator's `i`-th
   outbound message. The protocol specifies such a function for every `2 <= i <=
   r`; if `r == 1`, then this function is not defined.
 
-* `dist_finish(state: State, inbound_messages) -> output_share` is the
+* `vdaf_finish(state: State, inbound_messages) -> output_share` is the
   verify-finish algorithm. It consumes the `r`-th round of inbound messages
   (note that `len(inbound_messages) == s`) and produces the aggregator's output
   share, or an indication that the input shares are invalid.
@@ -350,26 +350,26 @@ def run_vdaf(param, inputs):
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
-    inputs_shares = dist_input(input)
+    inputs_shares = vdaf_input(input)
 
     # Aggregators verify and recover their output shares.
-    states = dist_init(param)
+    states = vdaf_init(param)
 
     outbound = []
     for j in range(s):
-      (states[j], msg) = dist_start(states[j], input_shares[j])
+      (states[j], msg) = vdaf_start(states[j], input_shares[j])
       outbound.append(msg)
     inbound = outbound
 
     for i in range(r-1):
       outbound = []
       for j in range(s):
-        (states[j], msg) = dist_next_i(states[j], inbound)
+        (states[j], msg) = vdaf_next_i(states[j], inbound)
         outbound.append(msg)
       inbound = outbound
 
     for j in range(s):
-      output_share[j] += dist_finish(states[j], inbound)
+      output_share[j] += vdaf_finish(states[j], inbound)
 
   # Aggregators compute the final output.
   return sum(output_shares)
@@ -461,7 +461,7 @@ Associated constants:
 ## Construction
 
 ~~~
-def dist_input(r_input):
+def vdaf_input(r_input):
   input = decode_vec(r_input)
   s_joint_rand = zeros(SEED_SIZE)
 
@@ -518,21 +518,21 @@ def dist_input(r_input):
     ))
   return output
 ~~~
-{: #prio3-dist-input title="Input distribution algorithm for Prio v3. TODO
+{: #prio3-vdaf-input title="Input distribution algorithm for Prio v3. TODO
 Figure out how this looks in the normal text format."}
 
 ~~~
-def dist_init(ignored_param):
+def vdaf_init(ignored_param):
   s_query_rand = get_rand(KEY_SIZE)
   states = []
   for j in range(s):
     states.append(ready(j, s_query_rand))
   return states
 ~~~
-{: #prio3-dist-init title="State-initialization algorithm for Prio v3."}
+{: #prio3-vdaf-init title="State-initialization algorithm for Prio v3."}
 
 ~~~
-def dist_start(state: State, r_input_share):
+def vdaf_start(state: State, r_input_share):
   if not state.ready(): raise ERR_STATE
 
   if state.aggregator_id == byte(0): # Leader
@@ -562,10 +562,10 @@ def dist_start(state: State, r_input_share):
   output = encode_verifier_share(s_joint_rand, verifier_share)
   return (new_state, output)
 ~~~
-{: #prio3-dist-start title="Verify-start algorithm for Prio v3."}
+{: #prio3-vdaf-start title="Verify-start algorithm for Prio v3."}
 
 ~~~
-def dist_finish(state: State, r_verifier_shares):
+def vdaf_finish(state: State, r_verifier_shares):
   if not state.waiting(): raise ERR_STATE
   if len(r_verifiers_shares) != s: raise ERR_DECODE
 
@@ -584,7 +584,7 @@ def dist_finish(state: State, r_verifier_shares):
   if not pcp_decide(verifier): raise ERR_INVALID
   return state.input_share
 ~~~
-{: #prio3-dist-finish title="Verify-finish algorithm for Prio v3."}
+{: #prio3-vdaf-finish title="Verify-finish algorithm for Prio v3."}
 
 Auxiliary functions:
 
