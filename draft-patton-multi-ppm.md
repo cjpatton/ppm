@@ -209,17 +209,17 @@ secret shared and (2) the aggregate statistic can be computed by summing up the
 vectors.
 -->
 
-Let `G[param]` denote the support of the output-recovery algorithm for a given
-aggregation parameter `param`. That is, set `G[param]` contains the set of all
+Let `G(param)` denote the support of the output-recovery algorithm for a given
+aggregation parameter `param`. That is, set `G(param)` contains the set of all
 possible outputs of `dist_output` when the first input is `param` and the second
 is any input share.
 
 Correctness requires that, for every aggregation parameter `param`, the set
-`G[param]` forms an additive group. This allows the aggregation function to be
+`G(param)` forms an additive group. This allows the aggregation function to be
 computed by having each aggregator sum up its output shares locally, then
 collectively computing the output by summing up their aggregated output shares.
 In particular, the aggregation function is computed by the following algorithm.
-(let `Zero[param]` be the identity element of `G[param]`):
+(let `Zero[param]` be the identity element of `G(param)`):
 
 ~~~
 def run_daf(param, inputs):
@@ -340,9 +340,9 @@ Associated constants:
 * `ROUNDS` TODO replace `r` with this.
 
 Just as for DAF schemes, we require that for each aggregation parameter `param`,
-the set of output shares `G[param]` forms an additive group. The aggregation
+the set of output shares `G(param)` forms an additive group. The aggregation
 function is computed by running the VDAF as specified below (let `Zero[param]`
-denote the additive identity of `G[param]`):
+denote the additive identity of `G(param)`):
 
 ~~~
 def run_vdaf(param, inputs):
@@ -401,10 +401,17 @@ system.
 Associated types
 
 * `Field`
-  * `vec_rand`
-  * `vec_zeros`
+  Associated functions:
+
+  * `vec_rand(len: U32) -> output: Vec[Field]` require that `len == len(output)`
+  * `vec_zeros(len: U32) -> output: Vec[Field]` require that `len ==
+    len(output)` and each element of `output` is zero.
   * `encode_vec`
-  * `decode_vec`
+  * `decode_vec` raises `ERR_DECODE`
+
+  Associated constants:
+
+  * `ENCODED_SIZE`
 
 Associated constants:
 
@@ -437,9 +444,11 @@ def run_pcp(input):
 [TODO Separate this syntax from what people usually think of as a KDF.] A
 key-derivation scheme consists of the following algorithms:
 
-* `get_key(init_key, input) -> key`
-* `get_key_stream(key) -> state: KeyStream`
-* `key_stream_next(state: KeyStream, len: U32) -> (new_state: KeyStream, output)`
+* `get_key(init_key, input) -> key` require `len(init_key) == KEY_SIZE` and
+  `len(key) == KEY_SIZE`.
+* `get_key_stream(key) -> state: KeyStream` require that `len(key) == KEY_SIZE`.
+* `key_stream_next(state: KeyStream, length: U32) -> (new_state: KeyStream,
+  output)` require that `length == len(output)`
 
 Associated types:
 
@@ -547,9 +556,9 @@ def dist_start(state: State, r_input_share):
   query_rand = expand(state.s_query_rand, QUERY_RAND_LEN)
   verifier_share = pcp_query(
       input_share, proof_share, joint_rand, query_rand)
-  verifier_len = len(verifier_share)
+  verifier_length = len(verifier_share)
 
-  new_state = wait(s_joint_rand, input_share, verifier_len)
+  new_state = wait(s_joint_rand, input_share, verifier_length)
   output = encode_verifier_share(s_joint_rand, verifier_share)
   return (new_state, output)
 ~~~
@@ -565,7 +574,7 @@ def dist_finish(state: State, r_verifier_shares):
   for r_share in r_verifier_shares:
     (s_joint_rand_share,
      verifier_share) = decode_verifier_share(r_share)
-    if len(verifier_share) != state.verifier_len:
+    if len(verifier_share) != state.verifier_length:
       raise ERR_DECODE
 
     s_joint_rand ^= s_joint_rand_share
@@ -577,19 +586,20 @@ def dist_finish(state: State, r_verifier_shares):
 ~~~
 {: #prio3-dist-finish title="Verify-finish algorithm for Prio v3."}
 
-Auxiliary functions (decoders raise ERR_DECODE):
+Auxiliary functions:
 
-* `expand(seed, len: U32) -> output: Vec[Field]`
-* `encode_helper_share`
-* `encode_leader_share`
-* `decode_helper_share`
-* `decode_leader_share`
-* `encode_verifier_share`
-* `decode_verifier_share`
+* `expand(seed, length: U32) -> output: Vec[Field]`
 * `ready`
 * `waiting`
-* `get_rand(len: U32) -> output`
-* `zeros(len: U32) -> output`
+* `encode_helper_share`
+* `decode_helper_share` raises `ERR_DECODE`
+* `encode_leader_share`
+* `decode_leader_share` raises `ERR_DECODE`
+* `encode_verifier_share`
+* `decode_verifier_share` raises `ERR_DECODE`
+* `get_rand(length: U32) -> output` require that `length == len(output)`
+* `zeros(length: U32) -> output` require that `lengh == len(output)` and that
+  each element of `output` is zero.
 
 
 # Security Considerations
