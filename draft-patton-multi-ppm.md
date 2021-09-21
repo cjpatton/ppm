@@ -477,7 +477,7 @@ def vdaf_input(r_input):
   k_helper_input_shares = []
   k_helper_blinds = []
   k_helper_hints = []
-  for j in range(s-1):
+  for j in range(SHARES-1):
     k_blind = get_rand(KEY_SIZE)
     k_share = get_rand(KEY_SIZE)
     helper_input_share = expand(k_share, len(leader_input_share))
@@ -494,16 +494,16 @@ def vdaf_input(r_input):
   k_joint_rand ^= k_leader_hint
 
   # Finish joint randomness hints.
-  for j in range(s-1):
+  for j in range(SHARES-1):
     k_helper_hints[i] ^= k_joint_rand
   k_leader_hint ^= k_joint_rand
 
   # Generate the proof shares.
   joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
   prove_rand = expand(get_rand(KEY_SIZE), PROVE_RAND_LEN)
-  leader_proof_share = pcp_prove(input, prove_rand, query_rand)
+  leader_proof_share = pcp_prove(input, prove_rand, joint_rand)
   k_helper_proof_shares = []
-  for j in range(s-1):
+  for j in range(SHARES-1):
     k_share = get_rand(KEY_SIZE)
     k_helper_proof_shares.append(k_share)
     helper_proof_share = expand(k_share, len(leader_proof_share))
@@ -516,7 +516,7 @@ def vdaf_input(r_input):
     k_leader_blind,
     k_leader_hint,
   ))
-  for j in range(s-1):
+  for j in range(SHARES-1):
     output.append(encode_helper_share(
       (k_helper_input_share[j], len(leader_input_share)),
       (k_helper_proof_share[j], len(leader_proof_share)),
@@ -532,7 +532,7 @@ Figure out how this looks in the normal text format."}
 def vdaf_init(ignored_param):
   k_query_rand = get_rand(KEY_SIZE)
   states = []
-  for j in range(s):
+  for j in range(SHARES):
     states.append(ready(j, k_query_rand))
   return states
 ~~~
@@ -562,7 +562,7 @@ def vdaf_start(state: State, r_input_share):
   joint_rand = expand(k_joint_rand, JOINT_RAND_LEN)
   query_rand = expand(state.k_query_rand, QUERY_RAND_LEN)
   verifier_share = pcp_query(
-      input_share, proof_share, joint_rand, query_rand)
+      input_share, proof_share, query_rand, joint_rand)
   verifier_length = len(verifier_share)
 
   new_state = wait(k_joint_rand, input_share, verifier_length)
