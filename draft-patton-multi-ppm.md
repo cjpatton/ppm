@@ -175,12 +175,12 @@ Syntactically, an DAF is made up of two algorithms:
   input shares (i.e., `len(input_shares) == s`). Each input share is sent to one
   of the aggregators.
 
-* `daf_output(param, input_share) -> output_share` is the deterministic
+* `daf_output(output_param, input_share) -> output_share` is the deterministic
   output-recovery algorithm. It is run be each aggregator in order to map an
-  input share to an output share. This mapping has a parameter `param`, which
-  can be used to "query" the input share multiple times with multiple
-  parameters, getting a different output share each time. `param` is called the
-  output parameter.
+  input share to an output share. This mapping has a output_parameter
+  `output_param`, which can be used to "query" the input share multiple times
+  with multiple output_parameters, getting a different output share each time.
+  `output_param` is called the output parameter.
 
 Execution of a DAF is illustrated in {{daf-flow}}. The client runs the
 input-distribution algorithm and sends an input share to each one of the
@@ -212,21 +212,22 @@ secret shared and (2) the aggregate statistic can be computed by summing up the
 vectors.
 -->
 
-Let `G(param)` denote the support of the output-recovery algorithm for a given
-output parameter `param`. That is, set `G(param)` contains the set of all
-possible outputs of `daf_output` when the first input is `param` and the second
-is any input share.
+Let `G(output_param)` denote the support of the output-recovery algorithm for a
+given output output_parameter `output_param`. That is, set `G(output_param)`
+contains the set of all possible outputs of `daf_output` when the first input is
+`output_param` and the second is any input share.
 
-Correctness requires that, for every output parameter `param`, the set
-`G(param)` forms an additive group. This allows the aggregation function to be
-computed by having each aggregator sum up its output shares locally, then
-collectively computing the output by summing up their aggregated output shares.
-In particular, the aggregation function is computed by the following algorithm.
-(let `Zero[param]` be the identity element of `G(param)`):
+Correctness requires that, for every output output_parameter `output_param`, the
+set `G(output_param)` forms an additive group. This allows the aggregation
+function to be computed by having each aggregator sum up its output shares
+locally, then collectively computing the output by summing up their aggregated
+output shares.  In particular, the aggregation function is computed by the
+following algorithm.  (let `Zero(output_param)` be the identity element of
+`G(output_param)`):
 
 ~~~
-def run_daf(param, inputs):
-  output_shares = [ Zero[param] for _ in range(SHARES) ]
+def run_daf(output_param, inputs):
+  output_shares = [ Zero(output_param) for _ in range(SHARES) ]
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
@@ -234,7 +235,7 @@ def run_daf(param, inputs):
 
     # Each aggregator runs the output-recvoery algorithm.
     for j in range(SHARES):
-      output_shares[j] += daf_output(param, input_shares[j])
+      output_shares[j] += daf_output(output_param, input_shares[j])
 
   # Aggregators compute the final output.
   return sum(output_shares)
@@ -302,32 +303,40 @@ returns an indication of invalidity.
 
 Syntactically, a VDAF is made up of the following algorithms:
 
-* `vdaf_input(input) -> input_shares` is the input-distribution algorithm
-  defined precisely the same way as `daf_input` in {{daf}}.
+* `vdaf_setup() -> (input_param, verify_param)` is the setup algorithm. It is
+  run out-of-band prior to evaluating the VDAF. Its outputs are the input
+  parameter `input_param` consumed by the clients and the verification parameter
+  `verify_param` consumed by the aggregators. Both are intended to be used
+  across multiple evaluations of the VDAF.
 
-* `vdaf_init(param) -> states: Vec[State]` is the state-initialization
+* `vdaf_input(input_param, input) -> input_shares: Vec[bytes]` is the
+  input-distribution algorithm that splits a client's input into a sequence of
+  input shares, one for each of the aggregators (i.e., `len(input_shares) ==
+  SHARES`).
+
+* `vdaf_init(verify_param) -> states: Vec[State]` is the state-initialization
   algorithm. It takes as input the output parameter and outputs the initial
   state of each aggregator (i.e., `len(states) == SHARES`). This algorithm is
   executed out-of-band and is used to configure the aggregators with whatever
-  they need to run the protocol (e.g., shared randomness). Type `State` is
-  defined by the VDAF scheme.
+  state is required for evaluation of the VDAF. Type `State` is defined by the
+  VDAF scheme.
 
 * `vdaf_start(state: State, input_share) -> (new_state: State,
   outbound_message)` is the verify-start algorithm and is run by each aggregator
   in response to an input share from the client. Its output is the aggregator's
   first outbound message to be broadcast to the other aggregators.
 
-* `vdaf_next_i(state: State, inbound_messages) -> (new_state: State,
+* `vdaf_next_i(state: State, inbound_messages: Vec[bytes]) -> (new_state: State,
   outbound_message)` consumes the `(i-1)`-th round of inbound messages (note
   that `len(inbound_messages) == SHARES`) and produces the aggregator's `i`-th
   outbound message. The protocol specifies such a function for every `2 <= i <=
   ROUNDS`, where `ROUNDS` is the number of rounds of the protocol. If `ROUNDS ==
   1`, then no such function is not defined.
 
-* `vdaf_finish(state: State, inbound_messages) -> output_share` is the
-  verify-finish algorithm. It consumes the last round of inbound messages (note
-  that `len(inbound_messages) == SHARES`) and produces the aggregator's output
-  share, or an indication that the input shares are invalid.
+* `vdaf_finish(state: State, output_param, inbound_messages: Vec[bytes]) ->
+  output_share` is the verify-finish algorithm. It consumes the last round of
+  inbound messages (note that `len(inbound_messages) == SHARES`) and produces
+  the aggregator's output share.
 
 Associated types:
 
@@ -339,21 +348,23 @@ Associated constants:
 * `SHARES` is the number of aggregators for which the VDAF is defined.
 * `ROUNDS` is the number of rounds of communication between the aggregators.
 
-Just as for DAF schemes, we require that for each output parameter `param`,
-the set of output shares `G(param)` forms an additive group. The aggregation
-function is computed by running the VDAF as specified below (let `Zero[param]`
-denote the additive identity of `G(param)`):
+Just as for DAF schemes, we require that for each output output_parameter
+`output_param`, the set of output shares `G(output_param)` forms an additive
+group. The aggregation function is computed by running the VDAF as specified
+below (let `Zero(output_param)` denote the additive identity of
+`G(output_param)`):
 
 ~~~
-def run_vdaf(param, inputs):
-  output_shares = [ Zero[param] for _ in range(SHARES) ]
+def run_vdaf(output_param, inputs):
+  output_shares = [ Zero(output_param) for _ in range(SHARES) ]
+  (input_param, verify_param) = vdaf_setup()
 
   for input in inputs:
     # Each client runs the input-distribution algorithm.
-    input_shares = vdaf_input(input)
+    input_shares = vdaf_input(input_param, input)
 
     # Aggregators verify and recover their output shares.
-    states = vdaf_init(param)
+    states = vdaf_init(verify_param)
 
     outbound = []
     for j in range(SHARES):
@@ -367,7 +378,7 @@ def run_vdaf(param, inputs):
       inbound = outbound
 
     for j in range(SHARES):
-      output_share[j] += vdaf_finish(states[j], inbound)
+      output_share[j] += vdaf_finish(states[j], output_param, inbound)
 
   # Aggregators compute the final output.
   return sum(output_shares)
@@ -463,7 +474,29 @@ Associated constants:
 
 * `KEY_SIZE`
 
+### Nonce Generation
+
+* `nonce_gen() -> nonce`
+
 ## Construction
+
+~~~
+def vdaf_setup():
+  k_query_init = get_rand(KEY_SIZE)
+  return (None, k_query_init)
+~~~
+{: #prio3-vdaf-setup title="Setup algorithm for prio3."}
+
+~~~
+def vdaf_init(k_query_init):
+  nonce = nonce_gen()
+  k_query_rand = get_key(k_query_init, nonce)
+  states = []
+  for j in range(SHARES):
+    states.append(ready(j, k_query_rand))
+  return states
+~~~
+{: #prio3-vdaf-init title="State-initialization algorithm for prio3."}
 
 ~~~
 def vdaf_input(r_input):
@@ -526,15 +559,6 @@ def vdaf_input(r_input):
 {: #prio3-vdaf-input title="Input distribution algorithm for prio3. TODO
 Figure out how this looks in the normal text format."}
 
-~~~
-def vdaf_init(ignored_param):
-  k_query_rand = get_rand(KEY_SIZE)
-  states = []
-  for j in range(SHARES):
-    states.append(ready(j, k_query_rand))
-  return states
-~~~
-{: #prio3-vdaf-init title="State-initialization algorithm for prio3."}
 
 ~~~
 def vdaf_start(state: State, r_input_share):
