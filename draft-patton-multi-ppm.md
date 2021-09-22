@@ -383,6 +383,13 @@ def run_vdaf(param, inputs):
 ~~~
 {: #run-vdaf title="Execution of a VDAF."}
 
+## Online State Initialization
+
+The state-initialization algorithm specifies how the aggregators are initialized
+out-of-band prior to verifying an input's validity. This typically involves
+generating and distributing randomness that is shared by all of the aggregators.
+In practice, it is necessary to perform this procedure in-band and without
+trusted setup. In {{coins}} we describe a protocol for doing just that.
 
 # [Working name] prio3 {#prio3}
 
