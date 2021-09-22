@@ -71,6 +71,7 @@ Table of Contents
    3.  Distributed Aggregation Functions
      3.1.  Aggregability
    4.  Verifiable Distributed Aggregation Functions
+     4.1.  Online State Initialization
    5.  [Working name] prio3
      5.1.  Dependencies
        5.1.1.  Fully Linear, Probabilistically Checkable Proof
@@ -362,6 +363,15 @@ Table of Contents
      return sum(output_shares)
 
                        Figure 4: Execution of a VDAF.
+
+4.1.  Online State Initialization
+
+   The state-initialization algorithm specifies how the aggregators are
+   initialized out-of-band prior to verifying an input's validity.  This
+   typically involves generating and distributing randomness that is
+   shared by all of the aggregators.  In practice, it is necessary to
+   perform this procedure in-band and without trusted setup.  In
+   Section 7 we describe a protocol for doing just that.
 
 5.  [Working name] prio3
 
