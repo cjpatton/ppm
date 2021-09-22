@@ -4,8 +4,8 @@
 
 TODO Working Group                                             C. Patton
 Internet-Draft                                                Cloudflare
-Intended status: Informational                         21 September 2021
-Expires: 25 March 2022
+Intended status: Informational                         22 September 2021
+Expires: 26 March 2022
 
 
         Multi-party Protocols for Privacy-preserving Measurement
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 25 March 2022.
+   This Internet-Draft will expire on 26 March 2022.
 
 Copyright Notice
 
@@ -164,8 +164,8 @@ Table of Contents
       aggregator in order to map an input share to an output share.
       This mapping has a parameter "param", which can be used to "query"
       the input share multiple times with multiple parameters, getting a
-      different output share each time. "param" is called the
-      aggregation parameter.
+      different output share each time. "param" is called the output
+      parameter.
 
    Execution of a DAF is illustrated in Figure 1.  The client runs the
    input-distribution algorithm and sends an input share to each one of
@@ -184,17 +184,17 @@ Table of Contents
 3.1.  Aggregability
 
    Let "G(param)" denote the support of the output-recovery algorithm
-   for a given aggregation parameter "param".  That is, set "G(param)"
+   for a given output parameter "param".  That is, set "G(param)"
    contains the set of all possible outputs of "daf_output" when the
    first input is "param" and the second is any input share.
 
-   Correctness requires that, for every aggregation parameter "param",
-   the set "G(param)" forms an additive group.  This allows the
-   aggregation function to be computed by having each aggregator sum up
-   its output shares locally, then collectively computing the output by
-   summing up their aggregated output shares.  In particular, the
-   aggregation function is computed by the following algorithm. (let
-   "Zero[param]" be the identity element of "G(param)"):
+   Correctness requires that, for every output parameter "param", the
+   set "G(param)" forms an additive group.  This allows the aggregation
+   function to be computed by having each aggregator sum up its output
+   shares locally, then collectively computing the output by summing up
+   their aggregated output shares.  In particular, the aggregation
+   function is computed by the following algorithm. (let "Zero[param]"
+   be the identity element of "G(param)"):
 
    def run_daf(param, inputs):
      output_shares = [ Zero[param] for _ in range(SHARES) ]
@@ -278,8 +278,8 @@ Table of Contents
       Section 3.
 
    *  "vdaf_init(param) -> states: Vec[State]" is the state-
-      initialization algorithm.  It takes as input the aggregation
-      parameter and outputs the initial state of each aggregator (i.e.,
+      initialization algorithm.  It takes as input the output parameter
+      and outputs the initial state of each aggregator (i.e.,
       "len(states) == SHARES").  This algorithm is executed out-of-band
       and is used to configure the aggregators with whatever they need
       to run the protocol (e.g., shared randomness).  Type "State" is
@@ -318,11 +318,10 @@ Table of Contents
    *  "ROUNDS" is the number of rounds of communication between the
       aggregators.
 
-   Just as for DAF schemes, we require that for each aggregation
-   parameter "param", the set of output shares "G(param)" forms an
-   additive group.  The aggregation function is computed by running the
-   VDAF as specified below (let "Zero[param]" denote the additive
-   identity of "G(param)"):
+   Just as for DAF schemes, we require that for each output parameter
+   "param", the set of output shares "G(param)" forms an additive group.
+   The aggregation function is computed by running the VDAF as specified
+   below (let "Zero[param]" denote the additive identity of "G(param)"):
 
    def run_vdaf(param, inputs):
      output_shares = [ Zero[param] for _ in range(SHARES) ]
