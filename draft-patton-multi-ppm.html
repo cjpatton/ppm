@@ -7,13 +7,14 @@
 <title>Multi-party Protocols for Privacy-preserving Measurement</title>
 <meta content="Christopher Patton" name="author">
 <meta content='
-       [TODO Move and rename this document to "draft-patton-vdaf".] This document
-describes Verifiable Distributed Aggregation Functions (VDAFs), a family of
-multi-party protocols for computing aggregate statistics over user measurements.
-These protocols are designed to ensure that, as long as at least one aggregation
-server executes the protocol honestly, individual measurements are never seen by
-any server in the clear. At the same time, VDAFs allow the servers to detect if
-a misconfigured or malicious client submitted a malformed input. 
+       [TODO Move and rename this document to "draft-patton-vdaf" and change the
+title.] This document describes Verifiable Distributed Aggregation Functions
+(VDAFs), a family of multi-party protocols for computing aggregate statistics
+over user measurements. These protocols are designed to ensure that, as long as
+at least one aggregation server executes the protocol honestly, individual
+measurements are never seen by any server in the clear. At the same time, VDAFs
+allow the servers to detect if a misconfigured or malicious client submitted a
+malformed input. 
     ' name="description">
 <meta content="xml2rfc 3.9.1" name="generator">
 <meta content="Internet-Draft" name="keyword">
@@ -1058,13 +1059,14 @@ address div.right {
 <h1 id="title">Multi-party Protocols for Privacy-preserving Measurement</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">[TODO Move and rename this document to "draft-patton-vdaf".] This document
-describes Verifiable Distributed Aggregation Functions (VDAFs), a family of
-multi-party protocols for computing aggregate statistics over user measurements.
-These protocols are designed to ensure that, as long as at least one aggregation
-server executes the protocol honestly, individual measurements are never seen by
-any server in the clear. At the same time, VDAFs allow the servers to detect if
-a misconfigured or malicious client submitted a malformed input.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">[TODO Move and rename this document to "draft-patton-vdaf" and change the
+title.] This document describes Verifiable Distributed Aggregation Functions
+(VDAFs), a family of multi-party protocols for computing aggregate statistics
+over user measurements. These protocols are designed to ensure that, as long as
+at least one aggregation server executes the protocol honestly, individual
+measurements are never seen by any server in the clear. At the same time, VDAFs
+allow the servers to detect if a misconfigured or malicious client submitted a
+malformed input.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1124,65 +1126,71 @@ a misconfigured or malicious client submitted a malformed input.<a href="#sectio
         <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
 <a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
         </h2>
-<nav class="toc"><ul class="ulBare compact ulEmpty toc">
-<li class="ulBare compact ulEmpty toc" id="section-toc.1-1.1">
+<nav class="toc"><ul class="ulEmpty ulBare compact toc">
+<li class="ulEmpty ulBare compact toc" id="section-toc.1-1.1">
             <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a></p>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.2">
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.2">
             <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="xref">2</a>.  <a href="#name-conventions-and-definitions" class="xref">Conventions and Definitions</a></p>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.3">
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.3">
             <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-distributed-aggregation-fun" class="xref">Distributed Aggregation Functions</a></p>
-<ul class="compact ulEmpty ulBare toc">
-<li class="compact ulEmpty ulBare toc" id="section-toc.1-1.3.2.1">
+<ul class="ulEmpty ulBare compact toc">
+<li class="ulEmpty ulBare compact toc" id="section-toc.1-1.3.2.1">
                 <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="xref">3.1</a>.  <a href="#name-aggregability" class="xref">Aggregability</a></p>
 </li>
             </ul>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.4">
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.4">
             <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-verifiable-distributed-aggr" class="xref">Verifiable Distributed Aggregation Functions</a></p>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-prio3" class="xref">prio3</a></p>
-<ul class="compact ulEmpty ulBare toc">
-<li class="compact ulEmpty ulBare toc" id="section-toc.1-1.5.2.1">
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-working-name-prio3" class="xref">[Working name] prio3</a></p>
+<ul class="ulEmpty ulBare compact toc">
+<li class="ulEmpty ulBare compact toc" id="section-toc.1-1.5.2.1">
                 <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="xref">5.1</a>.  <a href="#name-dependencies" class="xref">Dependencies</a></p>
-<ul class="compact ulEmpty ulBare toc">
-<li class="compact ulEmpty ulBare toc" id="section-toc.1-1.5.2.1.2.1">
+<ul class="ulEmpty ulBare compact toc">
+<li class="ulEmpty ulBare compact toc" id="section-toc.1-1.5.2.1.2.1">
                     <p id="section-toc.1-1.5.2.1.2.1.1"><a href="#section-5.1.1" class="xref">5.1.1</a>.  <a href="#name-fully-linear-probabilistica" class="xref">Fully Linear, Probabilistically Checkable Proof</a></p>
 </li>
-                  <li class="compact ulEmpty ulBare toc" id="section-toc.1-1.5.2.1.2.2">
+                  <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.5.2.1.2.2">
                     <p id="section-toc.1-1.5.2.1.2.2.1"><a href="#section-5.1.2" class="xref">5.1.2</a>.  <a href="#name-key-derivation" class="xref">Key Derivation</a></p>
 </li>
                 </ul>
 </li>
-              <li class="compact ulEmpty ulBare toc" id="section-toc.1-1.5.2.2">
+              <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.5.2.2">
                 <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="xref">5.2</a>.  <a href="#name-construction" class="xref">Construction</a></p>
 </li>
             </ul>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-security-considerations" class="xref">Security Considerations</a></p>
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-working-name-hits" class="xref">[Working name] hits</a></p>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a></p>
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-exchanging-verification-par" class="xref">Exchanging Verification Parameters</a></p>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-references" class="xref">References</a></p>
-<ul class="compact ulEmpty ulBare toc">
-<li class="compact ulEmpty ulBare toc" id="section-toc.1-1.8.2.1">
-                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="xref">8.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a></p>
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-security-considerations" class="xref">Security Considerations</a></p>
 </li>
-              <li class="compact ulEmpty ulBare toc" id="section-toc.1-1.8.2.2">
-                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="xref">8.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a></p>
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="xref">9</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a></p>
+</li>
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="xref">10</a>. <a href="#name-references" class="xref">References</a></p>
+<ul class="ulEmpty ulBare compact toc">
+<li class="ulEmpty ulBare compact toc" id="section-toc.1-1.10.2.1">
+                <p id="section-toc.1-1.10.2.1.1"><a href="#section-10.1" class="xref">10.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a></p>
+</li>
+              <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.10.2.2">
+                <p id="section-toc.1-1.10.2.2.1"><a href="#section-10.2" class="xref">10.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a></p>
 </li>
             </ul>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#appendix-A" class="xref"></a><a href="#name-acknowledgments" class="xref">Acknowledgments</a></p>
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-A" class="xref"></a><a href="#name-acknowledgments" class="xref">Acknowledgments</a></p>
 </li>
-          <li class="ulBare compact ulEmpty toc" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#appendix-B" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a></p>
+          <li class="ulEmpty ulBare compact toc" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-B" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a></p>
 </li>
         </ul>
 </nav>
@@ -1222,6 +1230,19 @@ keep the inputs private.<a href="#section-1-6.1" class="pilcrow">¶</a>
           <a href="#vdaf" class="xref">Section 4</a> defines Verifiable Distributed Aggregation Functions (VDAFs), an
 extension of DAFs that additionally allow the aggregators to detect malformed
 inputs.<a href="#section-1-6.2" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-6.3">
+          <a href="#prio3" class="xref">Section 5</a> specifies a VDAF suitable for the use cases of the original Prio
+system <span>[<a href="#CGB17" class="xref">CGB17</a>]</span>.<a href="#section-1-6.3" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-6.4">
+          <a href="#hits" class="xref">Section 6</a> specifies a VDAF for an "Incremental Distributed Point Function
+(IDPF)" for which the aggregators verify the output at each level of the tree.
+This corresponds to the protocol for the subset-histogram problem described by
+[BBCGGI21].<a href="#section-1-6.4" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-6.5">
+          <a href="#coins" class="xref">Section 7</a> XXX<a href="#section-1-6.5" class="pilcrow">¶</a>
 </li>
       </ul>
 </section>
@@ -1297,7 +1318,7 @@ aggregators. Next, the aggregators select a parameter for querying the input
 shares, and each runs the output-recover algorithm to obtain their share of the
 output. DAF schemes are designed to ensure that no proper subset of the
 aggregators can discern any information about the input or output given their
-view of the protocol. (See <a href="#security-considerations" class="xref">Section 6</a>.)<a href="#section-3-4" class="pilcrow">¶</a></p>
+view of the protocol. (See <a href="#security-considerations" class="xref">Section 8</a>.)<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">Associated constants:<a href="#section-3-5" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3-6.1">
@@ -1503,8 +1524,8 @@ def run_vdaf(param, inputs):
 </div>
 <div id="prio3">
 <section id="section-5">
-      <h2 id="name-prio3">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-prio3" class="section-name selfRef">prio3</a>
+      <h2 id="name-working-name-prio3">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-working-name-prio3" class="section-name selfRef">[Working name] prio3</a>
       </h2>
 <p id="section-5-1">NOTE This is WIP.<a href="#section-5-1" class="pilcrow">¶</a></p>
 <p id="section-5-2">NOTE This protocol has not undergone significant security analysis. This is
@@ -1840,39 +1861,72 @@ is not necessary. Should we bake this option into the spec?<a href="#section-5.2
 </div>
 </section>
 </div>
-<div id="security-considerations">
+<div id="hits">
 <section id="section-6">
-      <h2 id="name-security-considerations">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      <h2 id="name-working-name-hits">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-working-name-hits" class="section-name selfRef">[Working name] hits</a>
       </h2>
-<p id="section-6-1">TODO There will be a companion paper <span>[<a href="#PAPER" class="xref">PAPER</a>]</span> that will formalize the syntax and
+<p id="section-6-1">TODO<a href="#section-6-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-2.1">Input is a bit string of a specific length.<a href="#section-6-2.1" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-6-2.2">Input shares are IDPF shares and the correlated randomness for each level of
+the tree.<a href="#section-6-2.2" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-6-2.3">Output parameter is a set of candidate prefixes, all having the same length.<a href="#section-6-2.3" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-6-2.4">Output shares are secret shares of a vector of field elements, each
+corresponding to a counter for one of the candidate prefixes.<a href="#section-6-2.4" class="pilcrow">¶</a>
+</li>
+      </ul>
+</section>
+</div>
+<div id="coins">
+<section id="section-7">
+      <h2 id="name-exchanging-verification-par">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-exchanging-verification-par" class="section-name selfRef">Exchanging Verification Parameters</a>
+      </h2>
+<p id="section-7-1">TODO The state-initialization algorithm of both VDAF constructions in this
+document involve generating and distributing randomness for use during
+verification. This section describers a generic protocol for securely
+accomplishing this task.<a href="#section-7-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-8">
+      <h2 id="name-security-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-8-1">TODO There will be a companion paper <span>[<a href="#PAPER" class="xref">PAPER</a>]</span> that will formalize the syntax and
 security of VDAFs and analyze some of the constructions specified here. Here we
 will say at a high level what completeness, soundness, and privacy (i.e.,
-zero-knowledge) are.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">Things that are out of scope:<a href="#section-6-2" class="pilcrow">¶</a></p>
+zero-knowledge) are.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">Things that are out of scope:<a href="#section-8-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-6-3.1">Sybil attacks <span>[<a href="#Dou02" class="xref">Dou02</a>]</span><a href="#section-6-3.1" class="pilcrow">¶</a>
+<li class="normal" id="section-8-3.1">Sybil attacks <span>[<a href="#Dou02" class="xref">Dou02</a>]</span><a href="#section-8-3.1" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-6-3.2">Differential privacy <span>[<a href="#Vad16" class="xref">Vad16</a>]</span><a href="#section-6-3.2" class="pilcrow">¶</a>
+        <li class="normal" id="section-8-3.2">Differential privacy <span>[<a href="#Vad16" class="xref">Vad16</a>]</span><a href="#section-8-3.2" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-8-3.3">Network is synchronous, so VDAFs don't consider network attackers.<a href="#section-8-3.3" class="pilcrow">¶</a>
 </li>
       </ul>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-7">
+<section id="section-9">
       <h2 id="name-iana-considerations">
-<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-7-1">This document has no IANA actions.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-9-1">This document has no IANA actions.<a href="#section-9-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<section id="section-8">
+<section id="section-10">
       <h2 id="name-references">
-<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-references" class="section-name selfRef">References</a>
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
-<section id="section-8.1">
+<section id="section-10.1">
         <h3 id="name-normative-references">
-<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-10.1" class="section-number selfRef">10.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
         </h3>
 <dl class="references">
 <dt id="RFC2119">[RFC2119]</dt>
@@ -1885,9 +1939,9 @@ zero-knowledge) are.<a href="#section-6-1" class="pilcrow">¶</a></p>
 <dd class="break"></dd>
 </dl>
 </section>
-<section id="section-8.2">
+<section id="section-10.2">
         <h3 id="name-informative-references">
-<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+<a href="#section-10.2" class="section-number selfRef">10.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
         </h3>
 <dl class="references">
 <dt id="AGJOP21">[AGJOP21]</dt>
