@@ -180,7 +180,7 @@ Syntactically, an DAF is made up of two algorithms:
   input share to an output share. This mapping has a parameter `param`, which
   can be used to "query" the input share multiple times with multiple
   parameters, getting a different output share each time. `param` is called the
-  aggregation parameter.
+  output parameter.
 
 Execution of a DAF is illustrated in {{daf-flow}}. The client runs the
 input-distribution algorithm and sends an input share to each one of the
@@ -213,11 +213,11 @@ vectors.
 -->
 
 Let `G(param)` denote the support of the output-recovery algorithm for a given
-aggregation parameter `param`. That is, set `G(param)` contains the set of all
+output parameter `param`. That is, set `G(param)` contains the set of all
 possible outputs of `daf_output` when the first input is `param` and the second
 is any input share.
 
-Correctness requires that, for every aggregation parameter `param`, the set
+Correctness requires that, for every output parameter `param`, the set
 `G(param)` forms an additive group. This allows the aggregation function to be
 computed by having each aggregator sum up its output shares locally, then
 collectively computing the output by summing up their aggregated output shares.
@@ -306,7 +306,7 @@ Syntactically, a VDAF is made up of the following algorithms:
   defined precisely the same way as `daf_input` in {{daf}}.
 
 * `vdaf_init(param) -> states: Vec[State]` is the state-initialization
-  algorithm. It takes as input the aggregation parameter and outputs the initial
+  algorithm. It takes as input the output parameter and outputs the initial
   state of each aggregator (i.e., `len(states) == SHARES`). This algorithm is
   executed out-of-band and is used to configure the aggregators with whatever
   they need to run the protocol (e.g., shared randomness). Type `State` is
@@ -339,7 +339,7 @@ Associated constants:
 * `SHARES` is the number of aggregators for which the VDAF is defined.
 * `ROUNDS` is the number of rounds of communication between the aggregators.
 
-Just as for DAF schemes, we require that for each aggregation parameter `param`,
+Just as for DAF schemes, we require that for each output parameter `param`,
 the set of output shares `G(param)` forms an additive group. The aggregation
 function is computed by running the VDAF as specified below (let `Zero[param]`
 denote the additive identity of `G(param)`):
