@@ -652,7 +652,7 @@ Things that are out of scope:
 
 * Differential privacy [Vad16]
 
-* Network is synchronous, so VDAFs don't consider network attackers.
+* Communication is synchronous, so VDAFs don't consider network attackers.
 
 # IANA Considerations
 
