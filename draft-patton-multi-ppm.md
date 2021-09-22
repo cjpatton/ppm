@@ -92,13 +92,14 @@ informative:
 
 --- abstract
 
-[TODO Move and rename this document to "draft-patton-vdaf".] This document
-describes Verifiable Distributed Aggregation Functions (VDAFs), a family of
-multi-party protocols for computing aggregate statistics over user measurements.
-These protocols are designed to ensure that, as long as at least one aggregation
-server executes the protocol honestly, individual measurements are never seen by
-any server in the clear. At the same time, VDAFs allow the servers to detect if
-a misconfigured or malicious client submitted a malformed input.
+[TODO Move and rename this document to "draft-patton-vdaf" and change the
+title.] This document describes Verifiable Distributed Aggregation Functions
+(VDAFs), a family of multi-party protocols for computing aggregate statistics
+over user measurements. These protocols are designed to ensure that, as long as
+at least one aggregation server executes the protocol honestly, individual
+measurements are never seen by any server in the clear. At the same time, VDAFs
+allow the servers to detect if a misconfigured or malicious client submitted a
+malformed input.
 
 
 --- middle
@@ -134,6 +135,15 @@ This document is structured as follows.
   extension of DAFs that additionally allow the aggregators to detect malformed
   inputs.
 
+* {{prio3}} specifies a VDAF suitable for the use cases of the original Prio
+  system [CGB17].
+
+* {{hits}} specifies a VDAF for an "Incremental Distributed Point Function
+  (IDPF)" for which the aggregators verify the output at each level of the tree.
+  This corresponds to the protocol for the subset-histogram problem described by
+  [BBCGGI21].
+
+* {{coins}} XXX
 
 # Conventions and Definitions
 
@@ -374,7 +384,7 @@ def run_vdaf(param, inputs):
 {: #run-vdaf title="Execution of a VDAF."}
 
 
-# prio3 {#prio3}
+# [Working name] prio3 {#prio3}
 
 NOTE This is WIP.
 
@@ -608,6 +618,27 @@ Auxiliary functions:
 NOTE `JOINT_RAND_LEN` may be `0`, in which case the joint randomness computation
 is not necessary. Should we bake this option into the spec?
 
+
+# [Working name] hits {#hits}
+
+TODO
+
+* Input is a bit string of a specific length.
+* Input shares are IDPF shares and the correlated randomness for each level of
+  the tree.
+* Output parameter is a set of candidate prefixes, all having the same length.
+* Output shares are secret shares of a vector of field elements, each
+  corresponding to a counter for one of the candidate prefixes.
+
+
+# Exchanging Verification Parameters {#coins}
+
+TODO The state-initialization algorithm of both VDAF constructions in this
+document involve generating and distributing randomness for use during
+verification. This section describers a generic protocol for securely
+accomplishing this task.
+
+
 # Security Considerations
 
 TODO There will be a companion paper [PAPER] that will formalize the syntax and
@@ -620,6 +651,8 @@ Things that are out of scope:
 * Sybil attacks [Dou02]
 
 * Differential privacy [Vad16]
+
+* Network is synchronous, so VDAFs don't consider network attackers.
 
 # IANA Considerations
 
