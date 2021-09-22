@@ -362,10 +362,8 @@ def run_vdaf(param, inputs):
     inbound = outbound
 
     for i in range(ROUNDS-1):
-      outbound = []
       for j in range(SHARES):
-        (states[j], msg) = vdaf_next_i(states[j], inbound)
-        outbound.append(msg)
+        (states[j], outbound[j]) = vdaf_next_i(states[j], inbound)
       inbound = outbound
 
     for j in range(SHARES):
