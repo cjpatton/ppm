@@ -262,7 +262,7 @@ client
   |                  |                        |
   v                  v                        v
 +---------------+  +---------------+        +---------------+
-| vdaf_next_2() |  | vdaf_next_2() |        | vdaf_next_2() |
+| vdaf_next()   |  | vdaf_next()   |        | vdaf_next()   |
 +---------------+  +---------------+        +---------------+
   |                  |                   ...  |
   =============================================
@@ -317,12 +317,11 @@ Syntactically, a VDAF is made up of the following algorithms:
   in response to an input share from the client. Its output is the aggregator's
   first outbound message to be broadcast to the other aggregators.
 
-* `vdaf_next_i(state: State, inbound_messages) -> (new_state: State,
-  outbound_message)` consumes the `(i-1)`-th round of inbound messages (note
-  that `len(inbound_messages) == SHARES`) and produces the aggregator's `i`-th
-  outbound message. The protocol specifies such a function for every `2 <= i <=
-  ROUNDS`, where `ROUNDS` is the number of rounds of the protocol. If `ROUNDS ==
-  1`, then no such function is not defined.
+* `vdaf_next(state: State, inbound_messages) -> (new_state: State,
+  outbound_message)` is the verify-next algorithm. For each round `i >= 2` it
+  consumes the `(i-1)`-th round of inbound messages (note that
+  `len(inbound_messages) == SHARES`) and produces the aggregator's `i`-th
+  outbound message. This algorithm is undefined if `ROUNDS == 1`.
 
 * `vdaf_finish(state: State, inbound_messages) -> output_share` is the
   verify-finish algorithm. It consumes the last round of inbound messages (note
@@ -363,7 +362,7 @@ def run_vdaf(param, inputs):
 
     for i in range(ROUNDS-1):
       for j in range(SHARES):
-        (states[j], outbound[j]) = vdaf_next_i(states[j], inbound)
+        (states[j], outbound[j]) = vdaf_next(states[j], inbound)
       inbound = outbound
 
     for j in range(SHARES):
