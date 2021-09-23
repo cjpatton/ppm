@@ -252,6 +252,9 @@ def run_daf(param, inputs):
 {: #run-daf title="Definition of the aggregation function computed by an
 s-aggregator DAF."}
 
+NOTE because `G(param)` is an algebraic group, the order of `inputs` doesn't
+impact the output of the function. This is an important property of aggregation
+functions for which the inputs need to be kept private.
 
 # Verifiable Distributed Aggregation Functions {#vdaf}
 
@@ -382,6 +385,10 @@ def run_vdaf(param, inputs):
   return sum(output_shares)
 ~~~
 {: #run-vdaf title="Execution of a VDAF."}
+
+TODO It needs to be made clear that the order in which inbound messages are
+delivered to each aggregator is not always relevant to the protocol. Though I'm
+not sure it is a good idea to bake this into the syntax somehow.
 
 ## Online State Initialization
 
