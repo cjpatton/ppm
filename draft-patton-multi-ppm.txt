@@ -4,8 +4,8 @@
 
 TODO Working Group                                             C. Patton
 Internet-Draft                                                Cloudflare
-Intended status: Informational                         22 September 2021
-Expires: 26 March 2022
+Intended status: Informational                         23 September 2021
+Expires: 27 March 2022
 
 
         Multi-party Protocols for Privacy-preserving Measurement
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 March 2022.
+   This Internet-Draft will expire on 27 March 2022.
 
 Copyright Notice
 
@@ -226,6 +226,11 @@ Table of Contents
       Figure 2: Definition of the aggregation function computed by an
                              s-aggregator DAF.
 
+   NOTE because "G(param)" is an algebraic group, the order of "inputs"
+   doesn't impact the output of the function.  This is an important
+   property of aggregation functions for which the inputs need to be
+   kept private.
+
 4.  Verifiable Distributed Aggregation Functions
 
    client
@@ -363,6 +368,11 @@ Table of Contents
      return sum(output_shares)
 
                        Figure 4: Execution of a VDAF.
+
+   TODO It needs to be made clear that the order in which inbound
+   messages are delivered to each aggregator is not always relevant to
+   the protocol.  Though I'm not sure it is a good idea to bake this
+   into the syntax somehow.
 
 4.1.  Online State Initialization
 
