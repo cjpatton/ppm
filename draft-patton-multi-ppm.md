@@ -674,7 +674,11 @@ Things that are out of scope:
 
 * Differential privacy [Vad16]
 
-* Communication is synchronous, so VDAFs don't consider network attackers.
+* VDAF is expected to be run in the ideal environment specified in {{run-vdaf}}.
+  In particular, standard network attackers that can drop messages or inject
+  messages at will are out-of-scope. Such attackers are considered in the
+  PPM protocol, which is designed to "simulate" the environment expected by the
+  VDAF.
 
 # IANA Considerations
 
