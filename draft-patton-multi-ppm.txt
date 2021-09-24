@@ -4,8 +4,8 @@
 
 TODO Working Group                                             C. Patton
 Internet-Draft                                                Cloudflare
-Intended status: Informational                         23 September 2021
-Expires: 27 March 2022
+Intended status: Informational                         24 September 2021
+Expires: 28 March 2022
 
 
         Multi-party Protocols for Privacy-preserving Measurement
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 March 2022.
+   This Internet-Draft will expire on 28 March 2022.
 
 Copyright Notice
 
@@ -71,14 +71,13 @@ Table of Contents
    3.  Distributed Aggregation Functions
      3.1.  Aggregability
    4.  Verifiable Distributed Aggregation Functions
-     4.1.  Online State Initialization
    5.  [Working name] prio3
      5.1.  Dependencies
        5.1.1.  Fully Linear, Probabilistically Checkable Proof
        5.1.2.  Key Derivation
      5.2.  Construction
    6.  [Working name] hits
-   7.  Exchanging Verification Parameters
+   7.  Negotiating Verification Parameters
    8.  Security Considerations
    9.  IANA Considerations
    10. References
@@ -127,7 +126,8 @@ Table of Contents
       each level of the tree.  This corresponds to the protocol for the
       subset-histogram problem described by [BBCGGI21].
 
-   *  Section 7 XXX
+   *  Section 7 defines a procedure for negotiating shared randomness
+      used by the verifiers.
 
 2.  Conventions and Definitions
 
@@ -138,9 +138,10 @@ Table of Contents
    capitals, as shown here.
 
    Algorithms are written in Python 3.  Unless noted otherwise, function
-   parameters without a type hint have type "bytes".  A fatal error in a
-   program (e.g., failure to parse one of the function parameters) is
-   usually handled by raising an exception.
+   parameters without a type hint implicitly have type "Bytes", an
+   arbitrary byte string.  A fatal error in a program (e.g., failure to
+   parse one of the function parameters) is usually handled by raising
+   an exception.
 
 3.  Distributed Aggregation Functions
 
@@ -164,21 +165,22 @@ Table of Contents
    A DAF is a multi-party protocol for executing an aggregation function
    over a set of user inputs.  By distributing the input across multiple
    aggregators, the protocol ensures that individual inputs are never
-   seen in the clear.  Syntactically, an DAF is made up of two
+   seen in the clear.  Syntactically, a DAF is made up of two
    algorithms:
 
-   *  "daf_input(input) -> input_shares" is the randomized input-
-      distribution algorithm.  It is run by the client in order to split
-      its input into "SHARES" input shares (i.e., "len(input_shares) ==
-      s").  Each input share is sent to one of the aggregators.
+   *  "daf_input(input) -> input_shares: Vec[bytes]" is the randomized
+      input-distribution algorithm.  It is run by the client in order to
+      split its input into "SHARES" input shares (i.e.,
+      "len(input_shares) == SHARES").  Each input share is sent to one
+      of the aggregators.
 
-   *  "daf_output(param, input_share) -> output_share" is the
+   *  "daf_output(output_param, input_share) -> output_share" is the
       deterministic output-recovery algorithm.  It is run be each
       aggregator in order to map an input share to an output share.
-      This mapping has a parameter "param", which can be used to "query"
-      the input share multiple times with multiple parameters, getting a
-      different output share each time. "param" is called the output
-      parameter.
+      This mapping has a parameter "output_param", which can be used to
+      "query" the input share multiple times with multiple parameters,
+      getting a different output share each time. "output_param" is
+      called the output parameter.
 
    Execution of a DAF is illustrated in Figure 1.  The client runs the
    input-distribution algorithm and sends an input share to each one of
@@ -191,26 +193,28 @@ Table of Contents
 
    Associated constants:
 
-   *  "SHARES" is the number of aggregators for which the DAF is
-      defined.
+   *  "SHARES: Unsigned" is the number of aggregators for which the DAF
+      is defined.
 
 3.1.  Aggregability
 
-   Let "G(param)" denote the support of the output-recovery algorithm
-   for a given output parameter "param".  That is, set "G(param)"
-   contains the set of all possible outputs of "daf_output" when the
-   first input is "param" and the second is any input share.
+   Let "G(output_param)" denote the support of the output-recovery
+   algorithm for a given output parameter "output_param".  That is, set
+   "G(output_param)" contains the set of all possible outputs of the
+   output-recovery algorithm when the first input is "output_param" and
+   the second is any input share.
 
-   Correctness requires that, for every output parameter "param", the
-   set "G(param)" forms an additive group.  This allows the aggregation
-   function to be computed by having each aggregator sum up its output
-   shares locally, then collectively computing the output by summing up
-   their aggregated output shares.  In particular, the aggregation
-   function is computed by the following algorithm. (let "Zero[param]"
-   be the identity element of "G(param)"):
+   Correctness requires that, for every "output_param", the set
+   "G(output_param)" forms an additive group.  This allows the
+   aggregation function to be computed by having each aggregator sum up
+   its output shares locally, then collectively computing the output by
+   summing up their aggregated output shares.  In particular, the
+   aggregation function is computed by the following algorithm. (let
+   "Zero(output_param)" denote the identity element of
+   "G(output_param)"):
 
    def run_daf(param, inputs):
-     output_shares = [ Zero[param] for _ in range(SHARES) ]
+     output_shares = [ Zero(output_param) for _ in range(SHARES) ]
 
      for input in inputs:
        # Each client runs the input-distribution algorithm.
@@ -223,13 +227,11 @@ Table of Contents
      # Aggregators compute the final output.
      return sum(output_shares)
 
-      Figure 2: Definition of the aggregation function computed by an
-                             s-aggregator DAF.
+    Figure 2: Definition of the aggregation function computed by a DAF.
 
-   NOTE because "G(param)" is an algebraic group, the order of "inputs"
-   doesn't impact the output of the function.  This is an important
-   property of aggregation functions for which the inputs need to be
-   kept private.
+   NOTE because "G(output_param)" is an algebraic group, the order of
+   "inputs" doesn't impact the output of the function.  This property is
+   important for privacy.
 
 4.  Verifiable Distributed Aggregation Functions
 
@@ -291,69 +293,86 @@ Table of Contents
 
    Syntactically, a VDAF is made up of the following algorithms:
 
-   *  "vdaf_input(input) -> input_shares" is the input-distribution
-      algorithm defined precisely the same way as "daf_input" in
-      Section 3.
+   *  "vdaf_setup() -> (input_param, verify_param)" is the setup
+      algorithm used to generate the input parameter used by the client
+      ("input_param") and the verification parameter used by the
+      aggregators ("verify_param").  The parameters are generated once
+      and reused across multiple VDAF evaluations.
 
-   *  "vdaf_init(param) -> states: Vec[State]" is the state-
-      initialization algorithm.  It takes as input the output parameter
-      and outputs the initial state of each aggregator (i.e.,
-      "len(states) == SHARES").  This algorithm is executed out-of-band
-      and is used to configure the aggregators with whatever they need
-      to run the protocol (e.g., shared randomness).  Type "State" is
-      defined by the VDAF scheme.
+   *  "vdaf_input(input_param, input) -> (input_shares: Vec[bytes],
+      nonce)" is the input-distribution algorithm run by the client.  It
+      consumes the input parameter and input produces a sequence of
+      input shares, one for each aggregator (i.e., "len(input_shares) ==
+      SHARES").  Its second output, "nonce", is used by the aggregators
+      to verify the input shares.
 
-   *  "vdaf_start(state: State, input_share) -> (new_state: State,
-      outbound_message)" is the verify-start algorithm and is run by
-      each aggregator in response to an input share from the client.
-      Its output is the aggregator's first outbound message to be
-      broadcast to the other aggregators.
+      [TODO Update the main PPM spec so that the nonce is generated by
+      the VDAF.  While at it, we'll want to bump the size from 8 to 16
+      bytes so that honest clients don't have nonce collisions.]
 
-   *  "vdaf_next(state: State, inbound_messages) -> (new_state: State,
-      outbound_message)" is the verify-next algorithm.  For each round
-      "i >= 2" it consumes the "(i-1)"-th round of inbound messages
-      (note that "len(inbound_messages) == SHARES") and produces the
-      aggregator's "i"-th outbound message.  This algorithm is undefined
-      if "ROUNDS == 1".
+   *  "vdaf_start(j: Unsigned, verify_param, output_param, nonce,
+      input_share) -> (state: State, outbound_message)" is the verify-
+      start algorithm and is run by each aggregator.  Its inputs are an
+      indication of which aggregator is being run ("j"), the output
+      parameter ("output_param"), the verification parameter output by
+      the setup algorithm ("verify_param"), the nonce generated by the
+      client ("nonce"), and one of the input shares generated by the
+      client ("input_share").  Its outputs include the aggregator's
+      initial state ("state") and the outbound message it sends in the
+      first round ("outbound_message").
 
-   *  "vdaf_finish(state: State, inbound_messages) -> output_share" is
-      the verify-finish algorithm.  It consumes the last round of
-      inbound messages (note that "len(inbound_messages) == SHARES") and
-      produces the aggregator's output share, or an indication that the
-      input shares are invalid.
+   *  "vdaf_next(state: State, inbound_messages: Vec[bytes]) ->
+      (new_state: State, outbound_message)" is the verify-next
+      algorithm.  For each round "i >= 2" it consumes the "(i-1)"-th
+      round of inbound messages (note that "len(inbound_messages) ==
+      SHARES") and produces the aggregator's "i"-th outbound message.
+      This algorithm is undefined if "ROUNDS == 1".
+
+   *  "vdaf_finish(state: State, inbound_messages: Vec[bytes]) ->
+      output_share" is the verify-finish algorithm.  It consumes the
+      last round of inbound messages (note that "len(inbound_messages)
+      == SHARES") and produces the aggregator's output share.
+
+      [TODO For heavy hitters, is the output parameter rquired by the
+      verify-start algorithm, or can it be passed in to the verify-
+      finish algorithm here?  If the latter is possible, then there
+      would be no need to wait for the collect request to start
+      validating inputs.]
 
    Associated types:
 
    *  "State" is the state of an aggregator during executing of the
-      VDAF.  It is defined by the VDAF itself.
+      VDAF.  The type is defined by the VDAF itself.
 
    Associated constants:
 
-   *  "SHARES" is the number of aggregators for which the VDAF is
-      defined.
+   *  "SHARES: Unsigned" is the number of aggregators for which the VDAF
+      is defined.
 
-   *  "ROUNDS" is the number of rounds of communication between the
-      aggregators.
+   *  "ROUNDS: Unsigned" is the number of rounds of communication
+      between the aggregators.
 
    Just as for DAF schemes, we require that for each output parameter
-   "param", the set of output shares "G(param)" forms an additive group.
-   The aggregation function is computed by running the VDAF as specified
-   below (let "Zero[param]" denote the additive identity of "G(param)"):
+   "output_param", the set of output shares "G(output_param)" forms an
+   additive group.  The aggregation function is computed by running the
+   VDAF as specified below (let "Zero(output_param)" denote the additive
+   identity of "G(output_param)"):
 
-   def run_vdaf(param, inputs):
-     output_shares = [ Zero[param] for _ in range(SHARES) ]
+   def run_vdaf(output_param, inputs):
+     output_shares = [ Zero(output_param) for _ in range(SHARES) ]
+
+     (input_param, verify_param) = vdaf_setup()
 
      for input in inputs:
        # Each client runs the input-distribution algorithm.
-       input_shares = vdaf_input(input)
+       (input_shares, nonce) = vdaf_input(input_param, input)
 
-       # Aggregators verify and recover their output shares.
-       states = vdaf_init(param)
-
-       outbound = []
+       # Aggregators recover their output shares.
+       outbound, states = [], []
        for j in range(SHARES):
-         (states[j], msg) = vdaf_start(states[j], input_shares[j])
-         outbound.append(msg)
+         (state, msg) = vdaf_start(
+             j, verify_param, output_param, nonce, input_shares[j])
+         outbound.append(msg); states.append(state)
        inbound = outbound
 
        for i in range(ROUNDS-1):
@@ -368,20 +387,6 @@ Table of Contents
      return sum(output_shares)
 
                        Figure 4: Execution of a VDAF.
-
-   TODO It needs to be made clear that the order in which inbound
-   messages are delivered to each aggregator is not always relevant to
-   the protocol.  Though I'm not sure it is a good idea to bake this
-   into the syntax somehow.
-
-4.1.  Online State Initialization
-
-   The state-initialization algorithm specifies how the aggregators are
-   initialized out-of-band prior to verifying an input's validity.  This
-   typically involves generating and distributing randomness that is
-   shared by all of the aggregators.  In practice, it is necessary to
-   perform this procedure in-band and without trusted setup.  In
-   Section 7 we describe a protocol for doing just that.
 
 5.  [Working name] prio3
 
@@ -651,12 +656,12 @@ Table of Contents
    *  Output shares are secret shares of a vector of field elements,
       each corresponding to a counter for one of the candidate prefixes.
 
-7.  Exchanging Verification Parameters
+7.  Negotiating Verification Parameters
 
-   TODO The state-initialization algorithm of both VDAF constructions in
-   this document involve generating and distributing randomness for use
-   during verification.  This section describers a generic protocol for
-   securely accomplishing this task.
+   TODO The setup algorithm often involves generating and distributing
+   randomness used by the aggregators for verification.  This section
+   will describer a generic protocol for securely accomplishing this
+   task.
 
 8.  Security Considerations
 
@@ -726,7 +731,8 @@ Table of Contents
 
 Acknowledgments
 
-   TODO acknowledge.
+   Thanks to Christopher Wood for useful feedback on the syntax of VDAF
+   schemes.
 
 Author's Address
 
