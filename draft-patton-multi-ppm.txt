@@ -4,8 +4,8 @@
 
 TODO Working Group                                             C. Patton
 Internet-Draft                                                Cloudflare
-Intended status: Informational                         24 September 2021
-Expires: 28 March 2022
+Intended status: Informational                            2 October 2021
+Expires: 5 April 2022
 
 
         Multi-party Protocols for Privacy-preserving Measurement
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 March 2022.
+   This Internet-Draft will expire on 5 April 2022.
 
 Copyright Notice
 
@@ -138,7 +138,7 @@ Table of Contents
    capitals, as shown here.
 
    Algorithms are written in Python 3.  Unless noted otherwise, function
-   parameters without a type hint implicitly have type "Bytes", an
+   parameters without a type hint implicitly have type Bytes, an
    arbitrary byte string.  A fatal error in a program (e.g., failure to
    parse one of the function parameters) is usually handled by raising
    an exception.
@@ -168,19 +168,18 @@ Table of Contents
    seen in the clear.  Syntactically, a DAF is made up of two
    algorithms:
 
-   *  "daf_input(input) -> input_shares: Vec[bytes]" is the randomized
+   *  daf_input(input) -> input_shares: Vec[bytes] is the randomized
       input-distribution algorithm.  It is run by the client in order to
-      split its input into "SHARES" input shares (i.e.,
-      "len(input_shares) == SHARES").  Each input share is sent to one
-      of the aggregators.
+      split its input into SHARES input shares (i.e., len(input_shares)
+      == SHARES).  Each input share is sent to one of the aggregators.
 
-   *  "daf_output(output_param, input_share) -> output_share" is the
+   *  daf_output(output_param, input_share) -> output_share is the
       deterministic output-recovery algorithm.  It is run be each
       aggregator in order to map an input share to an output share.
-      This mapping has a parameter "output_param", which can be used to
+      This mapping has a parameter output_param, which can be used to
       "query" the input share multiple times with multiple parameters,
-      getting a different output share each time. "output_param" is
-      called the output parameter.
+      getting a different output share each time. output_param is called
+      the output parameter.
 
    Execution of a DAF is illustrated in Figure 1.  The client runs the
    input-distribution algorithm and sends an input share to each one of
@@ -193,25 +192,24 @@ Table of Contents
 
    Associated constants:
 
-   *  "SHARES: Unsigned" is the number of aggregators for which the DAF
-      is defined.
+   *  SHARES: Unsigned is the number of aggregators for which the DAF is
+      defined.
 
 3.1.  Aggregability
 
-   Let "G(output_param)" denote the support of the output-recovery
-   algorithm for a given output parameter "output_param".  That is, set
-   "G(output_param)" contains the set of all possible outputs of the
-   output-recovery algorithm when the first input is "output_param" and
+   Let G(output_param) denote the support of the output-recovery
+   algorithm for a given output parameter output_param.  That is, set
+   G(output_param) contains the set of all possible outputs of the
+   output-recovery algorithm when the first input is output_param and
    the second is any input share.
 
-   Correctness requires that, for every "output_param", the set
-   "G(output_param)" forms an additive group.  This allows the
-   aggregation function to be computed by having each aggregator sum up
-   its output shares locally, then collectively computing the output by
-   summing up their aggregated output shares.  In particular, the
-   aggregation function is computed by the following algorithm. (let
-   "Zero(output_param)" denote the identity element of
-   "G(output_param)"):
+   Correctness requires that, for every output_param, the set
+   G(output_param) forms an additive group.  This allows the aggregation
+   function to be computed by having each aggregator sum up its output
+   shares locally, then collectively computing the output by summing up
+   their aggregated output shares.  In particular, the aggregation
+   function is computed by the following algorithm. (let
+   Zero(output_param) denote the identity element of G(output_param)):
 
    def run_daf(param, inputs):
      output_shares = [ Zero(output_param) for _ in range(SHARES) ]
@@ -229,8 +227,8 @@ Table of Contents
 
     Figure 2: Definition of the aggregation function computed by a DAF.
 
-   NOTE because "G(output_param)" is an algebraic group, the order of
-   "inputs" doesn't impact the output of the function.  This property is
+   NOTE because G(output_param) is an algebraic group, the order of
+   inputs doesn't impact the output of the function.  This property is
    important for privacy.
 
 4.  Verifiable Distributed Aggregation Functions
@@ -293,43 +291,41 @@ Table of Contents
 
    Syntactically, a VDAF is made up of the following algorithms:
 
-   *  "vdaf_setup() -> (input_param, verify_param)" is the setup
-      algorithm used to generate the input parameter used by the client
-      ("input_param") and the verification parameter used by the
-      aggregators ("verify_param").  The parameters are generated once
-      and reused across multiple VDAF evaluations.
+   *  vdaf_setup() -> (input_param, verify_param) is the setup algorithm
+      used to generate the input parameter used by the client
+      (input_param) and the verification parameter used by the
+      aggregators (verify_param).  The parameters are generated once and
+      reused across multiple VDAF evaluations.
 
-   *  "vdaf_input(input_param, input) -> input_shares: Vec[bytes]" is
-      the input-distribution algorithm run by the client.  It consumes
-      the input parameter and input produces a sequence of input shares,
-      one for each aggregator (i.e., "len(input_shares) == SHARES").
+   *  vdaf_input(input_param, input) -> input_shares: Vec[bytes] is the
+      input-distribution algorithm run by the client.  It consumes the
+      input parameter and input produces a sequence of input shares, one
+      for each aggregator (i.e., len(input_shares) == SHARES).
 
-   *  "vdaf_start(j: Unsigned, verify_param, output_param, nonce,
-      input_share) -> (state: State, outbound_message)" is the verify-
-      start algorithm and is run by each aggregator.  Its inputs are an
-      indication of which aggregator is being run ("j"), the output
-      parameter ("output_param"), the verification parameter output by
-      the setup algorithm ("verify_param"), the nonce provided by the
-      environment ("nonce"; see Figure 4), and one of the input shares
-      generated by the client ("input_share").  Its outputs include the
-      aggregator's initial state ("state") and the outbound message it
-      sends in the first round ("outbound_message").
+   *  vdaf_start(verify_param, output_param, nonce, input_share) ->
+      (state: State, outbound_message) is the verify-start algorithm and
+      is run by each aggregator.  Its inputs are the verification
+      parameter (verify_param), the output parameter (output_param), the
+      nonce provided by the environment (nonce; see Figure 4), and one
+      of the input shares generated by the client (input_share).  Its
+      outputs include the aggregator's initial state (state) and the
+      outbound message it sends in the first round (outbound_message).
 
       [NOTE The nonce is provided by the environment, i.e., is generated
       by the PPM wrapper protocol.  We need to change the spec to make
       this 16 bytes to avoid collisions.]
 
-   *  "vdaf_next(state: State, inbound_messages: Vec[bytes]) ->
-      (new_state: State, outbound_message)" is the verify-next
-      algorithm.  For each round "i >= 2" it consumes the "(i-1)"-th
-      round of inbound messages (note that "len(inbound_messages) ==
-      SHARES") and produces the aggregator's "i"-th outbound message.
-      This algorithm is undefined if "ROUNDS == 1".
+   *  vdaf_next(state: State, inbound_messages: Vec[bytes]) ->
+      (new_state: State, outbound_message) is the verify-next algorithm.
+      For each round i >= 2 it consumes the (i-1)-th round of inbound
+      messages (note that len(inbound_messages) == SHARES) and produces
+      the aggregator's i-th outbound message.  This algorithm is
+      undefined if ROUNDS == 1.
 
-   *  "vdaf_finish(state: State, inbound_messages: Vec[bytes]) ->
-      output_share" is the verify-finish algorithm.  It consumes the
-      last round of inbound messages (note that "len(inbound_messages)
-      == SHARES") and produces the aggregator's output share.
+   *  vdaf_finish(state: State, inbound_messages: Vec[bytes]) ->
+      output_share is the verify-finish algorithm.  It consumes the last
+      round of inbound messages (note that len(inbound_messages) ==
+      SHARES) and produces the aggregator's output share.
 
       [TODO For heavy hitters, is the output parameter rquired by the
       verify-start algorithm, or can it be passed in to the verify-
@@ -339,22 +335,22 @@ Table of Contents
 
    Associated types:
 
-   *  "State" is the state of an aggregator during executing of the
-      VDAF.  The type is defined by the VDAF itself.
+   *  State is the state of an aggregator during executing of the VDAF.
+      The type is defined by the VDAF itself.
 
    Associated constants:
 
-   *  "SHARES: Unsigned" is the number of aggregators for which the VDAF
+   *  SHARES: Unsigned is the number of aggregators for which the VDAF
       is defined.
 
-   *  "ROUNDS: Unsigned" is the number of rounds of communication
-      between the aggregators.
+   *  ROUNDS: Unsigned is the number of rounds of communication between
+      the aggregators.
 
    Just as for DAF schemes, we require that for each output parameter
-   "output_param", the set of output shares "G(output_param)" forms an
+   output_param, the set of output shares G(output_param) forms an
    additive group.  The aggregation function is computed by running the
-   VDAF as specified below (let "Zero(output_param)" denote the additive
-   identity of "G(output_param)"):
+   VDAF as specified below (let Zero(output_param) denote the additive
+   identity of G(output_param)):
 
    def run_vdaf(output_param, inputs):
      output_shares = [ Zero(output_param) for _ in range(SHARES) ]
@@ -372,7 +368,7 @@ Table of Contents
        outbound, states = [], []
        for j in range(SHARES):
          (state, msg) = vdaf_start(
-             j, verify_param, output_param, nonce, input_shares[j])
+             verify_param, output_param, nonce, input_shares[j])
          outbound.append(msg); states.append(state)
        inbound = outbound
 
@@ -391,7 +387,7 @@ Table of Contents
        point-to-point connections, a broadcast channel, and a unique
                       nonce for each VDAF evaluation.
 
-   NOTE Algorithm "run_vdaf" specifies the environment in which the VDAF
+   NOTE Algorithm run_vdaf specifies the environment in which the VDAF
    is expected to be evaluated.  In particular, it provides generation
    of a unique nonce for each VDAF evaluation and a secure broadcast
    channel for executing each round of the protocol.  In practice, this
@@ -417,44 +413,44 @@ Table of Contents
    NOTE [BBDGGI19] call this a 1.5-round, public-coin, interactive
    oracle proof system.
 
-   All raise "ERR_INPUT":
+   All raise ERR_INPUT:
 
-   *  "pcp_prove(input: Vec[Field], prove_rand: Vec[Field], joint_rand:
-      Vec[Field]) -> proof: Vec[Field]" is the proof-generation
+   *  pcp_prove(input: Vec[Field], prove_rand: Vec[Field], joint_rand:
+      Vec[Field]) -> proof: Vec[Field] is the proof-generation
       algorithm.
 
-   *  "pcp_query(input: Vec[Field], proof: Vec[Field], query_rand:
-      Vec[Field], joint_rand: Vec[Field]) -> verifier: Vec[Field]" is
-      the query-generation algorithm.
+   *  pcp_query(input: Vec[Field], proof: Vec[Field], query_rand:
+      Vec[Field], joint_rand: Vec[Field]) -> verifier: Vec[Field] is the
+      query-generation algorithm.
 
-   *  "pcp_decide(verifier: Vec[Field]) -> decision: Boolean" is the
+   *  pcp_decide(verifier: Vec[Field]) -> decision: Boolean is the
       decision algorithm.
 
    Associated types
 
-   *  "Field" Associated functions:
+   *  Field Associated functions:
 
-      -  "vec_rand(len: U32) -> output: Vec[Field]" require that "len ==
-         len(output)"
+      -  vec_rand(len: U32) -> output: Vec[Field] require that len ==
+         len(output)
 
-      -  "vec_zeros(len: U32) -> output: Vec[Field]" require that "len
-         == len(output)" and each element of "output" is zero.
+      -  vec_zeros(len: U32) -> output: Vec[Field] require that len ==
+         len(output) and each element of output is zero.
 
-      -  "encode_vec"
+      -  encode_vec
 
-      -  "decode_vec" raises "ERR_DECODE"
+      -  decode_vec raises ERR_DECODE
 
       Associated constants:
 
-      -  "ENCODED_SIZE"
+      -  ENCODED_SIZE
 
    Associated constants:
 
-   *  "JOINT_RAND_LEN"
+   *  JOINT_RAND_LEN
 
-   *  "PROVE_RAND_LEN"
+   *  PROVE_RAND_LEN
 
-   *  "QUERY_RAND_LEN"
+   *  QUERY_RAND_LEN
 
    Execution semantics:
 
@@ -479,22 +475,22 @@ Table of Contents
    [TODO Separate this syntax from what people usually think of as a
    KDF.]  A key-derivation scheme consists of the following algorithms:
 
-   *  "get_key(init_key, input) -> key" require "len(init_key) ==
-      KEY_SIZE" and "len(key) == KEY_SIZE".
+   *  get_key(init_key, input) -> key require len(init_key) == KEY_SIZE
+      and len(key) == KEY_SIZE.
 
-   *  "get_key_stream(key) -> state: KeyStream" require that "len(key)
-      == KEY_SIZE".
+   *  get_key_stream(key) -> state: KeyStream require that len(key) ==
+      KEY_SIZE.
 
-   *  "key_stream_next(state: KeyStream, length: U32) -> (new_state:
-      KeyStream, output)" require that "length == len(output)"
+   *  key_stream_next(state: KeyStream, length: U32) -> (new_state:
+      KeyStream, output) require that length == len(output)
 
    Associated types:
 
-   *  "KeyStream"
+   *  KeyStream
 
    Associated constants:
 
-   *  "KEY_SIZE"
+   *  KEY_SIZE
 
 5.2.  Construction
 
@@ -546,14 +542,14 @@ Table of Contents
        leader_proof_share -= helper_proof_share
 
      output = []
-     output.append(encode_leader_share(
+     output.append(encode_leader_share(0,
        leader_input_share,
        leader_proof_share,
        k_leader_blind,
        k_leader_hint,
      ))
      for j in range(SHARES-1):
-       output.append(encode_helper_share(
+       output.append(encode_helper_share(j,
          (k_helper_input_share[j], len(leader_input_share)),
          (k_helper_proof_share[j], len(leader_proof_share)),
          k_helper_blinds[j],
@@ -564,21 +560,14 @@ Table of Contents
           Figure 7: Input distribution algorithm for prio3.  TODO
             Figure out how this looks in the normal text format.
 
-   def vdaf_start(j, k_query_init, _, nonce, r_input_share):
+   def vdaf_start(k_query_init, _, nonce, r_input_share):
      if not state.ready(): raise ERR_STATE
 
-     if j == 0: # Leader
-       (input_share,
-        proof_share,
-        k_blind,
-        k_hint) = decode_leader_share(input_share)
-     else: # Helper
-       (l_input_share,
-        l_proof_share,
-        k_blind,
-        k_hint) = decode_helper_share(input_share)
-       input_share = expand(*l_input_share)
-       proof_share = expand(*l_proof_share)
+     (j, input_share, proof_share,
+      k_blind, k_hint) = decode_share(input_share)
+     if j > 0: # helper
+       input_share = expand(*input_share)
+       proof_share = expand(*proof_share)
 
      k_joint_rand_share = get_key(k_blind, byte(j) + input_share)
      k_joint_rand = k_hint ^ k_joint_rand_share
@@ -619,29 +608,26 @@ Table of Contents
 
    Auxiliary functions:
 
-   *  "expand(seed, length: U32) -> output: Vec[Field]"
+   *  expand(seed, length: U32) -> output: Vec[Field]
 
-   *  "ready"
+   *  ready
 
-   *  "encode_helper_share"
+   *  encode_helper_share
 
-   *  "decode_helper_share" raises "ERR_DECODE"
+   *  encode_leader_share
 
-   *  "encode_leader_share"
+   *  decode_share raises ERR_DECODE
 
-   *  "decode_leader_share" raises "ERR_DECODE"
+   *  encode_verifier_share
 
-   *  "encode_verifier_share"
+   *  decode_verifier_share raises ERR_DECODE
 
-   *  "decode_verifier_share" raises "ERR_DECODE"
+   *  get_rand(length: U32) -> output require that length == len(output)
 
-   *  "get_rand(length: U32) -> output" require that "length ==
-      len(output)"
+   *  zeros(length: U32) -> output require that lengh == len(output) and
+      that each element of output is zero.
 
-   *  "zeros(length: U32) -> output" require that "lengh == len(output)"
-      and that each element of "output" is zero.
-
-   NOTE "JOINT_RAND_LEN" may be "0", in which case the joint randomness
+   NOTE JOINT_RAND_LEN may be 0, in which case the joint randomness
    computation is not necessary.  Should we bake this option into the
    spec?
 
